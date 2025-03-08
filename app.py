@@ -205,28 +205,35 @@ def load_user_history(username):
         st.error(f"Erro ao carregar histórico: {e}")
         return []
 
+# Container principal para o aplicativo
+main_container = st.container()
+
 # Tela de login (exibida apenas se não estiver autenticado)
 if not st.session_state.autenticado:
-    st.title("📰 Radar de Mercado IBBA - Login")
-    st.markdown("Por favor, informe seu nome e a senha para acessar o aplicativo.")
-    
-    # Campo para nome de usuário
-    username = st.text_input("Nome de usuário", value=st.session_state.get('username', ''), placeholder="Digite seu nome").strip()
-    
-    # Campo de senha
-    senha = st.text_input("Senha", type="password", key="senha")
-    
-    # Botão de login
-    if st.button("Entrar"):
-        # Atualizar username e verificar login
-        st.session_state.username = username
-        fazer_login(senha)
+    with main_container:
+        st.title("📰 Radar de Mercado IBBA - Login")
+        st.markdown("Por favor, informe seu nome e a senha para acessar o aplicativo.")
         
-    # Mensagem de rodapé
-    st.markdown("---")
-    st.markdown("*Este é um aplicativo restrito. Apenas usuários autorizados podem acessar.*")
+        # Campo para nome de usuário
+        username = st.text_input("Nome de usuário", value=st.session_state.get('username', ''), placeholder="Digite seu nome").strip()
+        
+        # Campo de senha
+        senha = st.text_input("Senha", type="password", key="senha")
+        
+        # Botão de login
+        if st.button("Entrar"):
+            # Atualizar username e verificar login
+            st.session_state.username = username
+            if fazer_login(senha):
+                main_container.empty()
+                st.experimental_rerun()
+        
+        # Mensagem de rodapé
+        st.markdown("---")
+        st.markdown("*Este é um aplicativo restrito. Apenas usuários autorizados podem acessar.*")
+        st.stop()
 
-# Título principal e abas (visíveis para todos)
+# Título principal (visível apenas após login)
 st.title("📰 Radar de Mercado IBBA")
 
 # Criação de abas (disponíveis para todos, mas conteúdo protegido)
@@ -388,18 +395,13 @@ with tab1:
                         # Limpar resultados anteriores se a nova busca não retornou nada
                         st.session_state.all_results = []
                         st.warning("Nenhuma notícia encontrada para os critérios selecionados.")
-                        # Validar seleção de palavras-chave
-            if not selected_keywords:
-                st.error("🔎 Selecione pelo menos uma palavra-chave para buscar.")
-            
             # Botão para buscar
-            if st.button("🔍 Buscar Notícias", type="primary", disabled=not selected_keywords, help="Clique para buscar notícias com os filtros selecionados"):
+            if st.button("🔍 Buscar Notícias", type="primary", help="Clique para buscar notícias com os filtros selecionados"):
                 st.session_state._button_clicked = True
-                if selected_keywords:
-                    with st.spinner('🔄 Buscando notícias... Por favor, aguarde...'):
-                        realizar_busca()
-                        if not st.session_state.all_results:
-                            st.warning("⚠️ Nenhuma notícia encontrada para os critérios selecionados. Tente ajustar os filtros.")
+                with st.spinner('🔄 Buscando notícias... Por favor, aguarde...'):
+                    realizar_busca()
+                    if not st.session_state.all_results:
+                        st.warning("⚠️ Nenhuma notícia encontrada para os critérios selecionados. Tente ajustar os filtros.")
             
             # Função de callback para atualizar o estado do checkbox
             def update_checkbox_state(i):
@@ -411,17 +413,19 @@ with tab1:
                 # Exibir tabela de resultados
                 st.subheader(f"Resultados da Busca ({len(st.session_state.all_results)} notícias)")
                 
-                # Botão para salvar notícias relevantes
-                if st.button("Salvar Notícias Relevantes no Histórico", type="primary"):
-                    if st.session_state.get('autenticado', False) and st.session_state.get('username', ''):
-                        username = st.session_state.get('username')
-                        
+                # Botões de ação no final da tabela
+                st.markdown("---")
+                col1, col2 = st.columns(2)
+                
+                with col2:
+                    # Botão para salvar notícias relevantes
+                    if st.button("💾 Salvar Notícias Relevantes", type="primary", help="Salvar as notícias marcadas como relevantes no histórico"):
                         # Filtrar apenas as notícias marcadas como relevantes
-                        noticias_relevantes = [
-                            result for i, result in enumerate(st.session_state.all_results)
-                            if st.session_state.relevante_state.get(i, False)
-                        ]
-                        
+                        noticias_relevantes = []
+                        for i, result in enumerate(st.session_state.all_results):
+                            if st.session_state.relevante_state.get(i, False):
+                                noticias_relevantes.append(result)
+                    
                         if not noticias_relevantes:
                             st.warning("Nenhuma notícia foi marcada como relevante.")
                         else:
@@ -435,7 +439,7 @@ with tab1:
                             consulta = {
                                 'id': consulta_id,
                                 'data_hora': datetime.datetime.now(fuso_brasil).strftime('%d/%m/%Y %H:%M'),
-                                'usuario': username,
+                                'usuario': st.session_state.username,
                                 'parametros': {
                                     'keywords': selected_keywords,
                                     'languages': selected_languages,
@@ -456,17 +460,15 @@ with tab1:
                             
                             try:
                                 # Salvar o histórico do usuário
-                                if save_user_history(username, st.session_state.historico_consultas):
+                                if save_user_history(st.session_state.username, st.session_state.historico_consultas):
                                     st.success(f"{len(noticias_relevantes)} notícias relevantes salvas no histórico!")
                                 else:
                                     st.error("Não foi possível salvar as notícias no histórico.")
                             except Exception as e:
                                 st.error(f"Erro ao salvar notícias no histórico: {e}")
-                    else:
-                        st.error("Você precisa estar autenticado para salvar notícias.")
                 
                 # Criar cabeçalho da tabela
-                header_cols = st.columns([0.05, 0.15, 0.3, 0.2, 0.1, 0.2])
+                header_cols = st.columns([0.05, 0.15, 0.35, 0.2, 0.1, 0.15])
                 header_cols[0].write("**Índice**")
                 header_cols[1].write("**Palavra-chave**")
                 header_cols[2].write("**Título**")
@@ -477,7 +479,7 @@ with tab1:
                 # Exibir cada linha da tabela
                 for i, result in enumerate(st.session_state.all_results):
                     # Criar colunas para cada linha
-                    row_cols = st.columns([0.05, 0.15, 0.3, 0.2, 0.1, 0.2])
+                    row_cols = st.columns([0.05, 0.15, 0.35, 0.2, 0.1, 0.15])
                     
                     # Formatar a data para exibição
                     from dateutil import parser
@@ -491,8 +493,7 @@ with tab1:
                     row_cols[3].write(data_formatada)
                     row_cols[4].markdown(f"[Abrir]({result['link']})")
                     
-                    # Checkbox para marcar como relevante (no final da linha)
-                    # Usando uma chave única baseada no índice e título para evitar conflitos
+                    # Checkbox para marcar como relevante
                     checkbox_key = f"relevante_{i}_{hash(result['title'])}"
                     row_cols[5].checkbox(
                         "", 
@@ -505,7 +506,7 @@ with tab1:
                 # Preparar CSV para download incluindo a coluna de relevância
                 # Formatar as datas para o padrão brasileiro
                 datas_formatadas = []
-                for result in st.session_state.all_results:
+                for i, result in enumerate(st.session_state.all_results):
                     data_publicacao = parser.parse(result['published'])
                     datas_formatadas.append(data_publicacao.strftime('%d/%m/%Y %H:%M'))
                 
@@ -523,14 +524,15 @@ with tab1:
                 # Converter para CSV
                 csv = csv_data.to_csv(index=False)
                 
-                # Botão para download direto em CSV
-                st.download_button(
-                    label="Baixar Resultados (CSV)",
-                    data=csv,
-                    file_name=f"noticias_{datetime.datetime.now(fuso_brasil).strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv",
-                    help="Baixe os resultados da busca em formato CSV para abrir em Excel ou outro programa de planilhas"
-                )
+                with col1:
+                    # Botão para download direto em CSV
+                    st.download_button(
+                        label="⬇️ Baixar Resultados (CSV)",
+                        data=csv,
+                        file_name=f"noticias_{datetime.datetime.now(fuso_brasil).strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        help="Baixe os resultados da busca em formato CSV para abrir em Excel ou outro programa de planilhas"
+                    )
             else:
                 if st.session_state.get('_button_clicked', False):
                     st.error("Nenhuma notícia encontrada para os critérios selecionados.")

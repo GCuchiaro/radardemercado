@@ -4,3 +4,4 @@ requests==2.31.0
 streamlit==1.32.0
 streamlit-aggrid==0.3.4
 pandas==2.1.4
+pytz==2024.1

@@ -750,4 +750,4 @@ with tab4:
 
 # Rodapé - visível para todos, mesmo sem autenticação
 st.markdown("---")
-st.markdown("📰 Radar de Mercado IBBA | Desenvolvido com Streamlit")
+st.markdown("📰 Radar de Mercado IBBA | Desenvolvido por Giovanni Cuchiaro com a ajuda do Streamlit")

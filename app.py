@@ -78,7 +78,7 @@ def save_keywords(keywords):
 
 # Tela de login (exibida apenas se não estiver autenticado)
 if not st.session_state.autenticado:
-    st.title("📰 Google News Searcher - Login")
+    st.title("📰 Radar de Mercado IBBA - Login")
     st.markdown("Por favor, insira a senha para acessar o aplicativo.")
     
     # Campo de senha
@@ -104,8 +104,15 @@ if st.session_state.autenticado:
     
     # Botão de logout
     if st.sidebar.button("Sair"):
+        # Limpar todas as variáveis de sessão relevantes
         st.session_state.autenticado = False
-        st.experimental_rerun()
+        if 'all_results' in st.session_state:
+            del st.session_state.all_results
+        if 'relevante_state' in st.session_state:
+            del st.session_state.relevante_state
+        if 'busca_realizada' in st.session_state:
+            del st.session_state.busca_realizada
+        st.rerun()
 
 # Aba 1: Buscar Notícias
 with tab1:
@@ -237,28 +244,35 @@ with tab1:
                 st.subheader(f"Resultados da Busca ({len(st.session_state.all_results)} notícias)")
                 
                 # Criar cabeçalho da tabela
-                header_cols = st.columns([0.1, 0.3, 0.4, 0.1, 0.1])
+                header_cols = st.columns([0.05, 0.15, 0.3, 0.2, 0.1, 0.2])
                 header_cols[0].write("**Índice**")
                 header_cols[1].write("**Palavra-chave**")
                 header_cols[2].write("**Título**")
-                header_cols[3].write("**Link**")
-                header_cols[4].write("**Relevante**")
+                header_cols[3].write("**Data/Hora**")
+                header_cols[4].write("**Link**")
+                header_cols[5].write("**Relevante**")
                 
                 # Exibir cada linha da tabela
                 for i, result in enumerate(st.session_state.all_results):
                     # Criar colunas para cada linha
-                    row_cols = st.columns([0.1, 0.3, 0.4, 0.1, 0.1])
+                    row_cols = st.columns([0.05, 0.15, 0.3, 0.2, 0.1, 0.2])
+                    
+                    # Formatar a data para exibição
+                    from dateutil import parser
+                    data_publicacao = parser.parse(result['published'])
+                    data_formatada = data_publicacao.strftime('%d/%m/%Y %H:%M')
                     
                     # Dados da notícia
                     row_cols[0].write(str(i))
                     row_cols[1].write(result['keyword'])
                     row_cols[2].write(result['title'])
-                    row_cols[3].markdown(f"[Abrir]({result['link']})")
+                    row_cols[3].write(data_formatada)
+                    row_cols[4].markdown(f"[Abrir]({result['link']})")
                     
                     # Checkbox para marcar como relevante (no final da linha)
                     # Usando uma chave única baseada no índice e título para evitar conflitos
                     checkbox_key = f"relevante_{i}_{hash(result['title'])}"
-                    row_cols[4].checkbox(
+                    row_cols[5].checkbox(
                         "", 
                         key=checkbox_key,
                         value=st.session_state.relevante_state.get(i, False),
@@ -267,13 +281,19 @@ with tab1:
                     )
                 
                 # Preparar CSV para download incluindo a coluna de relevância
+                # Formatar as datas para o padrão brasileiro
+                datas_formatadas = []
+                for result in st.session_state.all_results:
+                    data_publicacao = parser.parse(result['published'])
+                    datas_formatadas.append(data_publicacao.strftime('%d/%m/%Y %H:%M'))
+                
                 csv_data = pd.DataFrame({
                     'Relevante': [st.session_state.relevante_state.get(i, False) for i in range(len(st.session_state.all_results))],
                     'Índice': list(range(len(st.session_state.all_results))),
                     'Palavra-chave': [result['keyword'] for result in st.session_state.all_results],
                     'Título': [result['title'] for result in st.session_state.all_results],
                     'Fonte': [result['source'] for result in st.session_state.all_results],
-                    'Data': [result['published'] for result in st.session_state.all_results],
+                    'Data/Hora': datas_formatadas,
                     'Idioma': [result['language'] for result in st.session_state.all_results],
                     'Link': [result['link'] for result in st.session_state.all_results]
                 })

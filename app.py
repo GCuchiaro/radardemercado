@@ -9,11 +9,9 @@ import hashlib
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from google_news_searcher import GoogleNewsSearcher
 
-# Importações removidas - não estamos mais usando AgGrid
-
 # Configuração da página
 st.set_page_config(
-    page_title="Google News Searcher",
+    page_title="Radar de Mercado",
     page_icon="📰",
     layout="wide"
 )
@@ -29,13 +27,52 @@ def verificar_senha(senha_informada):
 # Inicializar estado de autenticação
 if 'autenticado' not in st.session_state:
     st.session_state.autenticado = False
+    
+# Inicializar nome de usuário
+if 'username' not in st.session_state:
+    st.session_state.username = ""
 
 # Função para fazer login
-def fazer_login():
-    if verificar_senha(st.session_state.senha):
-        st.session_state.autenticado = True
-    else:
+def fazer_login(senha):
+    username = st.session_state.get('username', '').strip()
+    
+    if not username:
+        st.error("Por favor, informe seu nome de usuário.")
+        return
+        
+    if not senha:
+        st.error("Por favor, informe a senha.")
+        return
+        
+    if not verificar_senha(senha):
         st.error("Senha incorreta. Tente novamente.")
+        return
+    
+    # Se chegou aqui, login está válido
+    st.session_state.autenticado = True
+    st.session_state.username = username  # Garantir que o username está na sessão
+    
+    try:
+        # Carregar o histórico de consultas do usuário
+        historico = load_user_history(username)
+        if historico:
+            st.session_state.historico_consultas = historico
+            st.success(f"Bem-vindo, {username}! Seu histórico com {len(historico)} consultas foi carregado.")
+        else:
+            st.session_state.historico_consultas = []
+            st.success(f"Bem-vindo, {username}! Nenhum histórico encontrado. Suas consultas serão salvas automaticamente.")
+    except Exception as e:
+        st.error(f"Erro ao carregar histórico: {e}")
+        st.session_state.historico_consultas = []
+        
+# Função para atualizar o estado de relevância na edição
+def update_relevance_state(consulta_id, indice):
+    # Obter a chave do checkbox
+    checkbox_key = f"edit_relevante_{consulta_id}_{indice}"
+    # Obter o estado atual do checkbox
+    is_relevant = st.session_state.get(checkbox_key, False)
+    # Atualizar o estado de relevância
+    st.session_state[f"edit_state_{consulta_id}"][str(indice)] = is_relevant
 
 # Inicializar o searcher
 @st.cache_resource
@@ -54,6 +91,10 @@ if 'relevante_state' not in st.session_state:
 # Flag para rastrear quando o botão de busca foi clicado
 if '_button_clicked' not in st.session_state:
     st.session_state._button_clicked = False
+    
+# Inicializar histórico de consultas
+if 'historico_consultas' not in st.session_state:
+    st.session_state.historico_consultas = []
 
 # Função para carregar as palavras-chave
 def load_keywords():
@@ -75,18 +116,111 @@ def save_keywords(keywords):
         st.success("Palavras-chave salvas com sucesso!")
     except Exception as e:
         st.error(f"Erro ao salvar palavras-chave: {e}")
+        
+# Funções para gerenciar o histórico de consultas por usuário
+def get_user_history_file(username):
+    # Verificar se o nome de usuário não está vazio
+    if not username or not username.strip():
+        raise ValueError("Nome de usuário não pode ser vazio")
+        
+    # Criar um nome de arquivo seguro baseado no nome do usuário
+    safe_username = ''.join(c if c.isalnum() else '_' for c in username.lower().strip())
+    return os.path.join(os.path.dirname(searcher.config_file), f"historico_{safe_username}.json")
+
+def save_user_history(username, historico):
+    try:
+        if not username or not username.strip():
+            st.error("Erro: Nome de usuário vazio. Histórico não será salvo.")
+            print("Tentativa de salvar histórico com nome de usuário vazio.")
+            return False
+            
+        if not isinstance(historico, (list, dict)):
+            st.error("Erro: Histórico deve ser uma lista ou dicionário.")
+            print(f"Histórico inválido para {username}: {type(historico)}")
+            return False
+            
+        if not historico:
+            print(f"Nenhum histórico para salvar para o usuário {username}")
+            return True
+            
+        history_file = get_user_history_file(username)
+        if not isinstance(history_file, str) or not history_file.strip():
+            st.error("Erro: Caminho do arquivo de histórico inválido.")
+            print(f"Caminho inválido para {username}: {history_file}")
+            return False
+        
+        os.makedirs(os.path.dirname(history_file), exist_ok=True)
+        
+        def json_serializable(obj):
+            if isinstance(obj, datetime.datetime):
+                return obj.isoformat()
+            return str(obj)
+
+        with open(history_file, 'w', encoding='utf-8') as f:
+            json.dump(historico, f, ensure_ascii=False, indent=2, default=json_serializable)
+            
+        print(f"Histórico salvo com sucesso para o usuário {username} em {history_file}")
+        return True
+    except PermissionError as e:
+        st.error(f"Erro de permissão ao salvar histórico: {e}")
+        print(f"Erro de permissão para {username}: {e}")
+        return False
+    except (TypeError, ValueError) as e:
+        st.error(f"Erro ao serializar histórico em JSON: {e}")
+        print(f"Erro de serialização para {username}: {e}")
+        return False
+    except Exception as e:
+        st.error(f"Erro inesperado ao salvar histórico: {e}")
+        print(f"Erro inesperado para {username}: {e}")
+        return False
+
+def load_user_history(username):
+    try:
+        if not username or not username.strip():
+            print(f"Tentativa de carregar histórico com nome de usuário vazio.")
+            return []
+            
+        history_file = get_user_history_file(username)
+        if os.path.exists(history_file):
+            with open(history_file, 'r', encoding='utf-8') as f:
+                historico = json.load(f)
+                # Garantir que todas as consultas tenham a estrutura correta
+                historico_validado = []
+                for consulta in historico:
+                    # Verificar se todos os campos necessários existem
+                    if 'resultados' not in consulta or 'relevante_state' not in consulta:
+                        continue
+                        
+                    # Garantir que o usuário está correto
+                    consulta['usuario'] = username
+                    
+                    # Garantir que relevante_state use chaves como strings
+                    if not isinstance(next(iter(consulta['relevante_state'] or {"0": False})), str):
+                        consulta['relevante_state'] = {str(k): v for k, v in consulta['relevante_state'].items()}
+                        
+                    historico_validado.append(consulta)
+                return historico_validado
+        return []
+    except Exception as e:
+        st.error(f"Erro ao carregar histórico: {e}")
+        return []
 
 # Tela de login (exibida apenas se não estiver autenticado)
 if not st.session_state.autenticado:
     st.title("📰 Radar de Mercado IBBA - Login")
-    st.markdown("Por favor, insira a senha para acessar o aplicativo.")
+    st.markdown("Por favor, informe seu nome e a senha para acessar o aplicativo.")
+    
+    # Campo para nome de usuário
+    username = st.text_input("Nome de usuário", value=st.session_state.get('username', ''), placeholder="Digite seu nome").strip()
     
     # Campo de senha
-    st.text_input("Senha", type="password", key="senha", on_change=fazer_login)
+    senha = st.text_input("Senha", type="password", key="senha")
     
     # Botão de login
     if st.button("Entrar"):
-        fazer_login()
+        # Atualizar username e verificar login
+        st.session_state.username = username
+        fazer_login(senha)
         
     # Mensagem de rodapé
     st.markdown("---")
@@ -96,22 +230,48 @@ if not st.session_state.autenticado:
 st.title("📰 Radar de Mercado IBBA")
 
 # Criação de abas (disponíveis para todos, mas conteúdo protegido)
-tab1, tab2, tab3 = st.tabs(["Buscar Notícias", "Gerenciar Palavras-chave", "Sobre"])
+tab1, tab2, tab3, tab4 = st.tabs(["Buscar Notícias", "Histórico de Consultas", "Gerenciar Palavras-chave", "Sobre"])
 
 # Conteúdo principal do aplicativo (exibido apenas se estiver autenticado)
 if st.session_state.autenticado:
     st.markdown("Busque notícias relacionadas às suas palavras-chave de interesse no Google News.")
     
+    # Exibir informações do usuário logado na barra lateral
+    st.sidebar.write(f"Usuário: **{st.session_state.username}**")
+    
     # Botão de logout
     if st.sidebar.button("Sair"):
-        # Limpar todas as variáveis de sessão relevantes
-        st.session_state.autenticado = False
-        if 'all_results' in st.session_state:
-            del st.session_state.all_results
-        if 'relevante_state' in st.session_state:
-            del st.session_state.relevante_state
-        if 'busca_realizada' in st.session_state:
-            del st.session_state.busca_realizada
+        try:
+            # Obter o nome do usuário atual
+            username = st.session_state.get('username', '').strip()
+            if not username:
+                st.sidebar.error("Erro: Nome de usuário não encontrado na sessão.")
+            else:
+                # Salvar o histórico do usuário antes de fazer logout
+                if st.session_state.get('historico_consultas', []):
+                    if save_user_history(username, st.session_state.historico_consultas):
+                        st.sidebar.success(f"Histórico de {username} salvo com sucesso!")
+                        print(f"Histórico salvo com sucesso para {username} durante logout")
+                    else:
+                        st.sidebar.error(f"Não foi possível salvar o histórico de {username}.")
+                        print(f"Falha ao salvar histórico para {username} durante logout")
+        except Exception as e:
+            st.sidebar.error(f"Erro ao salvar histórico durante logout: {e}")
+            print(f"Erro durante logout: {e}")
+        finally:
+            # Limpar todas as variáveis de sessão
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            
+            # Reinicializar variáveis essenciais
+            st.session_state.autenticado = False
+            st.session_state.username = ""
+            st.session_state.historico_consultas = []
+            
+            # Forçar atualização da página
+            st.rerun()
+        if 'historico_consultas' in st.session_state:
+            del st.session_state.historico_consultas
         st.rerun()
 
 # Aba 1: Buscar Notícias
@@ -143,7 +303,8 @@ with tab1:
             language_option = st.radio(
                 "Idioma para busca:",
                 ["Português", "Inglês", "Ambos"],
-                horizontal=True
+                horizontal=True,
+                help="Escolha o idioma das notícias que deseja buscar"
             )
         
             language_map = {
@@ -159,7 +320,8 @@ with tab1:
             period_option = st.radio(
                 "Período:",
                 ["Últimas 24 horas", "Última semana", "Último mês", "Período personalizado"],
-                horizontal=True
+                horizontal=True,
+                help="Escolha o período de tempo para buscar notícias"
             )
         
             # Definir datas com base no período selecionado (fuso horário brasileiro)
@@ -226,12 +388,18 @@ with tab1:
                         # Limpar resultados anteriores se a nova busca não retornou nada
                         st.session_state.all_results = []
                         st.warning("Nenhuma notícia encontrada para os critérios selecionados.")
+                        # Validar seleção de palavras-chave
+            if not selected_keywords:
+                st.error("🔎 Selecione pelo menos uma palavra-chave para buscar.")
             
             # Botão para buscar
-            if st.button("Buscar Notícias", type="primary", disabled=not selected_keywords):
+            if st.button("🔍 Buscar Notícias", type="primary", disabled=not selected_keywords, help="Clique para buscar notícias com os filtros selecionados"):
                 st.session_state._button_clicked = True
                 if selected_keywords:
-                    realizar_busca()
+                    with st.spinner('🔄 Buscando notícias... Por favor, aguarde...'):
+                        realizar_busca()
+                        if not st.session_state.all_results:
+                            st.warning("⚠️ Nenhuma notícia encontrada para os critérios selecionados. Tente ajustar os filtros.")
             
             # Função de callback para atualizar o estado do checkbox
             def update_checkbox_state(i):
@@ -242,6 +410,60 @@ with tab1:
             if st.session_state.all_results:
                 # Exibir tabela de resultados
                 st.subheader(f"Resultados da Busca ({len(st.session_state.all_results)} notícias)")
+                
+                # Botão para salvar notícias relevantes
+                if st.button("Salvar Notícias Relevantes no Histórico", type="primary"):
+                    if st.session_state.get('autenticado', False) and st.session_state.get('username', ''):
+                        username = st.session_state.get('username')
+                        
+                        # Filtrar apenas as notícias marcadas como relevantes
+                        noticias_relevantes = [
+                            result for i, result in enumerate(st.session_state.all_results)
+                            if st.session_state.relevante_state.get(i, False)
+                        ]
+                        
+                        if not noticias_relevantes:
+                            st.warning("Nenhuma notícia foi marcada como relevante.")
+                        else:
+                            # Criar um ID único para a consulta baseado na data/hora
+                            consulta_id = datetime.datetime.now(fuso_brasil).strftime('%Y%m%d_%H%M%S')
+                            
+                            # Criar dicionário de relevância apenas para as notícias relevantes
+                            relevante_state = {str(i): True for i in range(len(noticias_relevantes))}
+                            
+                            # Salvar parâmetros e resultados da consulta
+                            consulta = {
+                                'id': consulta_id,
+                                'data_hora': datetime.datetime.now(fuso_brasil).strftime('%d/%m/%Y %H:%M'),
+                                'usuario': username,
+                                'parametros': {
+                                    'keywords': selected_keywords,
+                                    'languages': selected_languages,
+                                    'period': period_option,
+                                    'start_date': start_date,
+                                    'end_date': end_date
+                                },
+                                'resultados': noticias_relevantes,
+                                'relevante_state': relevante_state
+                            }
+                            
+                            # Garantir que o histórico existe na sessão
+                            if 'historico_consultas' not in st.session_state:
+                                st.session_state.historico_consultas = []
+                            
+                            # Adicionar ao histórico (no início da lista para mostrar mais recentes primeiro)
+                            st.session_state.historico_consultas.insert(0, consulta)
+                            
+                            try:
+                                # Salvar o histórico do usuário
+                                if save_user_history(username, st.session_state.historico_consultas):
+                                    st.success(f"{len(noticias_relevantes)} notícias relevantes salvas no histórico!")
+                                else:
+                                    st.error("Não foi possível salvar as notícias no histórico.")
+                            except Exception as e:
+                                st.error(f"Erro ao salvar notícias no histórico: {e}")
+                    else:
+                        st.error("Você precisa estar autenticado para salvar notícias.")
                 
                 # Criar cabeçalho da tabela
                 header_cols = st.columns([0.05, 0.15, 0.3, 0.2, 0.1, 0.2])
@@ -316,8 +538,148 @@ with tab1:
             if not selected_keywords:
                 st.error("Selecione pelo menos uma palavra-chave para buscar.")
 
-# Aba 2: Gerenciar Palavras-chave
+def export_all_history_to_csv(historico_consultas):
+    if not historico_consultas:
+        return None
+        
+    # Lista para armazenar todas as notícias relevantes
+    todas_noticias = []
+    
+    # Processar cada consulta
+    for consulta in historico_consultas:
+        # Filtrar notícias relevantes
+        noticias_relevantes = [result for j, result in enumerate(consulta['resultados']) 
+                              if consulta['relevante_state'].get(str(j), False)]
+        
+        # Adicionar informações da consulta para cada notícia
+        for noticia in noticias_relevantes:
+            data_publicacao = parser.parse(noticia['published'])
+            data_formatada = data_publicacao.strftime('%d/%m/%Y %H:%M')
+            
+            todas_noticias.append({
+                'Data da Consulta': consulta.get('data_hora', ''),
+                'ID da Consulta': consulta.get('id', ''),
+                'Palavra-chave': noticia['keyword'],
+                'Título': noticia['title'],
+                'Fonte': noticia['source'],
+                'Data de Publicação': data_formatada,
+                'Idioma': noticia['language'],
+                'Link': noticia['link']
+            })
+    
+    if not todas_noticias:
+        return None
+        
+    # Criar DataFrame
+    return pd.DataFrame(todas_noticias)
+
+# Aba 2: Histórico de Consultas
 with tab2:
+    if st.session_state.autenticado:
+        st.header("Histórico de Consultas")
+        
+        if not st.session_state.historico_consultas:
+            st.info("Nenhuma consulta salva no histórico. Realize buscas na aba 'Buscar Notícias' para salvá-las aqui.")
+        else:
+            col1, col2 = st.columns([0.7, 0.3])
+            with col1:
+                st.write(f"Total de consultas salvas: {len(st.session_state.historico_consultas)}")
+            
+            with col2:
+                # Botão para exportar todo o histórico
+                if st.button("📥 Exportar Todo o Histórico", help="Baixe todas as notícias relevantes em um único arquivo CSV"):
+                    df_historico = export_all_history_to_csv(st.session_state.historico_consultas)
+                    if df_historico is not None:
+                        csv = df_historico.to_csv(index=False)
+                        st.download_button(
+                            label="⬇️ Baixar CSV",
+                            data=csv,
+                            file_name=f"historico_completo_{st.session_state.username}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                            mime="text/csv",
+                            help="Clique para baixar o arquivo CSV com todo o histórico de notícias relevantes"
+                        )
+                    else:
+                        st.info("Não há notícias relevantes no histórico para exportar.")
+            
+            # Exibir consultas em formato de acordeão
+            for i, consulta in enumerate(st.session_state.historico_consultas):
+                with st.expander(f"Consulta {i+1} - {consulta['data_hora']}"):
+                    # Exibir parâmetros da consulta
+                    st.subheader("Parâmetros da Consulta")
+                    st.write(f"**Palavras-chave:** {', '.join(consulta['parametros']['keywords'])}")
+                    st.write(f"**Idiomas:** {', '.join(consulta['parametros']['languages'])}")
+                    st.write(f"**Período:** {consulta['parametros']['period']}")
+                    st.write(f"**Data inicial:** {consulta['parametros']['start_date']}")
+                    st.write(f"**Data final:** {consulta['parametros']['end_date']}")
+                    
+                    # Filtrar apenas notícias relevantes
+                    noticias_relevantes = [result for j, result in enumerate(consulta['resultados']) if consulta['relevante_state'].get(str(j), False)]
+                    
+                    # Exibir resultados da consulta
+                    st.subheader(f"Notícias Relevantes ({len(noticias_relevantes)} notícias)")
+                    
+                    if not noticias_relevantes:
+                        st.info("Nenhuma notícia foi marcada como relevante nesta consulta.")
+                    
+                    if noticias_relevantes:
+                        # Criar tabela de resultados
+                        header_cols = st.columns([0.05, 0.15, 0.35, 0.25, 0.2])
+                        header_cols[0].write("**Índice**")
+                        header_cols[1].write("**Palavra-chave**")
+                        header_cols[2].write("**Título**")
+                        header_cols[3].write("**Data/Hora**")
+                        header_cols[4].write("**Link**")
+                        
+                        # Exibir cada linha da tabela
+                        for j, result in enumerate(noticias_relevantes):
+                            # Criar colunas para cada linha
+                            row_cols = st.columns([0.05, 0.15, 0.35, 0.25, 0.2])
+                            
+                            # Formatar a data para exibição
+                            from dateutil import parser
+                            data_publicacao = parser.parse(result['published'])
+                            data_formatada = data_publicacao.strftime('%d/%m/%Y %H:%M')
+                            
+                            # Dados da notícia
+                            row_cols[0].write(str(j))
+                            row_cols[1].write(result['keyword'])
+                            row_cols[2].write(result['title'])
+                            row_cols[3].write(data_formatada)
+                            row_cols[4].markdown(f"[Abrir]({result['link']})")
+                    
+                    if noticias_relevantes:
+                        # Preparar CSV para download
+                        datas_formatadas = []
+                        for result in noticias_relevantes:
+                            data_publicacao = parser.parse(result['published'])
+                            datas_formatadas.append(data_publicacao.strftime('%d/%m/%Y %H:%M'))
+                        
+                        csv_data = pd.DataFrame({
+                            'Índice': list(range(len(noticias_relevantes))),
+                            'Palavra-chave': [result['keyword'] for result in noticias_relevantes],
+                            'Título': [result['title'] for result in noticias_relevantes],
+                            'Fonte': [result['source'] for result in noticias_relevantes],
+                            'Data/Hora': datas_formatadas,
+                            'Idioma': [result['language'] for result in noticias_relevantes],
+                            'Link': [result['link'] for result in noticias_relevantes]
+                        })
+                        
+                        # Converter para CSV
+                        csv = csv_data.to_csv(index=False)
+                        
+                        # Botão para download direto em CSV
+                        st.download_button(
+                            label="Baixar Notícias Relevantes (CSV)",
+                            data=csv,
+                            file_name=f"noticias_relevantes_{consulta['id']}.csv",
+                            mime="text/csv",
+                            help="Baixe as notícias relevantes em formato CSV para abrir em Excel ou outro programa de planilhas"
+                        )
+                    
+
+
+# Aba 3: Gerenciar Palavras-chave
+with tab3:
     if st.session_state.autenticado:
         st.header("Gerenciar Palavras-chave")
         
@@ -354,29 +716,34 @@ with tab2:
                 save_keywords(keywords)
                 st.experimental_rerun()
 
-# Aba 3: Sobre
-with tab3:
+# Aba 4: Sobre
+with tab4:
     if st.session_state.autenticado:
         st.header("Sobre o Radar de Mercado IBBA")
         st.markdown("""
         ### Descrição
-        O Radar de Mercado IBBA é uma aplicação que permite buscar notícias relacionadas a palavras-chave específicas no feed RSS do Google News.
+        O Radar de Mercado IBBA é uma aplicação segura e eficiente que permite monitorar notícias relacionadas a palavras-chave específicas no feed RSS do Google News, facilitando a análise de informações relevantes para o mercado financeiro e corporativo.
         
         ### Funcionalidades
-        - Cadastro de palavras-chave de interesse
-        - Busca de notícias em português e inglês
-        - Filtragem por período de tempo
-        - Salvamento dos resultados em formato texto e JSON
+        - Sistema de autenticação com senha para acesso seguro
+        - Cadastro e gerenciamento de palavras-chave de interesse
+        - Busca de notícias em português e inglês com fuso horário brasileiro
+        - Filtragem por período de tempo (24h, 7 dias ou período personalizado)
+        - Marcação de notícias relevantes para análise posterior
+        - Exportação dos resultados em formato CSV para análise em Excel
+        - Histórico de consultas com acesso a buscas anteriores
         
         ### Como usar
-        1. Cadastre suas palavras-chave na aba "Gerenciar Palavras-chave"
-        2. Vá para a aba "Buscar Notícias"
-        3. Selecione as palavras-chave, idioma e período de busca
-        4. Clique em "Buscar Notícias"
-        5. Visualize os resultados e salve-os se desejar
+        1. Faça login com a senha fornecida pelo administrador
+        2. Cadastre suas palavras-chave de interesse na aba "Gerenciar Palavras-chave"
+        3. Na aba "Buscar Notícias", selecione as palavras-chave, idiomas e período desejado
+        4. Clique em "Buscar Notícias" para obter os resultados
+        5. Marque as notícias relevantes usando os checkboxes na tabela
+        6. Baixe os resultados em formato CSV para análise detalhada
+        7. Acesse suas consultas anteriores na aba "Histórico de Consultas"
     
-        ### Desenvolvido por
-        Esta aplicação foi desenvolvida como um projeto para busca de notícias utilizando o feed RSS do Google News.
+        ### Desenvolvido para
+        Esta aplicação foi desenvolvida exclusivamente para o IBBA como ferramenta de monitoramento de notícias e informações de mercado.
         """)
 
 # Rodapé - visível para todos, mesmo sem autenticação

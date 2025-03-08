@@ -1,0 +1,80 @@
+[
+  {
+    "id": "20250308_122840",
+    "data_hora": "08/03/2025 12:28",
+    "usuario": "Giovanni",
+    "parametros": {
+      "keywords": [
+        "Embedded Finance"
+      ],
+      "languages": [
+        "pt",
+        "en"
+      ],
+      "period": "Última semana",
+      "start_date": "01/03/2025",
+      "end_date": "08/03/2025"
+    },
+    "resultados": [
+      {
+        "title": "The churn tsunami ISVs face: How embedded finance is becoming the retention lifeline - Bobsguide",
+        "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxQWENjeUw4NHFQbXpwT3RRanBMWUN1SDhMcWlZZG5uR2E0ZUo5bXlYMmJCaUJoTG9XMzluSmpXT3NTSTEtQ1k2VGFlYXFUUnFKc0VmQVJOa2l5OV9SMDhlbGQwdVE3Y1haZEJRVmp2UnA4THZ1Y1IzSzBkcmRqYURMRVJJV1pUZzR2akhfd01jdHhRd1dTYVJYamJjRVNfejZwVkxxOHRlcVgtTTgyMFdv?oc=5",
+        "published": "03/03/2025 18:30",
+        "source": "Bobsguide",
+        "keyword": "Embedded Finance",
+        "language": "Inglês"
+      },
+      {
+        "title": "Fiserv Enhances Its Embedded Finance Solutions by Closing the Acquisition of Payfare - Fintech Finance",
+        "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxNM2Z3Ul9CZ3FRZFJlOGJIZ1JHRDI2bkpyYXV1RFc0dkF2ZVBSajktVy1xQkd4SHdPSl8zTTgydm9tMFhMMjRPdDVYLXZYZ25BMTlLSEt4XzU5YkhGM0wycXhxTFRTSkd2Y2l6X2Iya3R5S3V5elZiSFpINmhIeTA0MktmZzI5QjJ2TmJES0IwejBNZzRjUUI3NFNLWm1BaDhLTXlDdGFjbWlPN01OSHpnbk45OGQ4cmNCaWZ1RFplZV9RZw?oc=5",
+        "published": "03/03/2025 13:27",
+        "source": "Fintech Finance",
+        "keyword": "Embedded Finance",
+        "language": "Inglês"
+      },
+      {
+        "title": "How Fiserv's C$193M Payfare Acquisition Reshapes Embedded Banking Solutions - StockTitan",
+        "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNeWFLY21MRFpEYWlBUF9Hdk92MDRMbFdiWTRjUFJpOUYxRDEyN2hhbXM0SFEtaE1aWnFxQUZ4M0YxdzVBMUgtcE5lZk53UmpVQzhxNlVkdXN2N0loUWhRSVpwcks5WHVWeFpfLVJ4bFFVRW9INi1wQlBiM0NpTG9IWWRHWVg3aGNFTDdqaTZVbnRNaGJPTHIwaU5nMzAwZmdYT1hLYzg1WmI1Ri0tRWVlc09Zc3Q?oc=5",
+        "published": "03/03/2025 12:16",
+        "source": "StockTitan",
+        "keyword": "Embedded Finance",
+        "language": "Inglês"
+      }
+    ],
+    "relevante_state": {
+      "0": true,
+      "1": true,
+      "2": true
+    }
+  },
+  {
+    "id": "20250308_115425",
+    "data_hora": "08/03/2025 11:54",
+    "usuario": "Giovanni",
+    "parametros": {
+      "keywords": [
+        "Embedded Finance"
+      ],
+      "languages": [
+        "pt",
+        "en"
+      ],
+      "period": "Últimas 24 horas",
+      "start_date": "07/03/2025",
+      "end_date": "08/03/2025"
+    },
+    "resultados": [
+      {
+        "title": "Airwallex expands Embedded Finance tools for creator platforms - The Paypers",
+        "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxPc1ZSVlNGUERJZlVLaV9HcU9BWFdkWWhKczhydDJXVjUyQVJvZkZLTFVMUkM2ejZoZmt3RjhJZjJKcERGUUZjNDVROUxfSEVWZHVPaC1LN3VPMjVJUU1ISE9EWXJWOU5hRHdGdS10YkVlMmE3RVBHVzJiNndmQ29iWS1tTXpZNFVhbk8waUhpNnVkUVNBMjBzMmZLemM3RkR5czk0aUZERzJjY1lpbGJ0Vw?oc=5",
+        "published": "07/03/2025 09:10",
+        "source": "The Paypers",
+        "keyword": "Embedded Finance",
+        "language": "Inglês"
+      }
+    ],
+    "relevante_state": {
+      "0": true
+    }
+  }
+]

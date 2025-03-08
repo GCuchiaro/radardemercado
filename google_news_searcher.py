@@ -43,7 +43,7 @@ import requests
 class GoogleNewsSearcher:
     def __init__(self):
         self.keywords = []
-        self.config_file = "keywords.json"
+        self.config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "keywords.json")
         # Configurações de idioma para as buscas
         self.language_configs = {
             'pt': {'hl': 'pt-BR', 'gl': 'BR', 'ceid': 'BR:pt-419', 'name': 'Português'},

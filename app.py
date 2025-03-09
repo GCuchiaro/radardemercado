@@ -754,7 +754,13 @@ with tab1:
                     row_cols[1].write(result['keyword'])
                     row_cols[2].write(result['title'])
                     row_cols[3].write(data_formatada)
-                    row_cols[4].markdown(f"[Abrir]({result['link']})")
+                    # Corrigindo o link para garantir que abra corretamente
+                    link = result['link']
+                    # Garantir que o link tenha o protocolo http/https
+                    if not link.startswith(('http://', 'https://')):
+                        link = 'https://' + link.lstrip('/')
+                    # Usar o componente de link do Streamlit para melhor compatibilidade
+                    row_cols[4].markdown(f"<a href='{link}' target='_blank'>Abrir</a>", unsafe_allow_html=True)
                     
                     # Checkbox para marcar como relevante
                     checkbox_key = f"relevante_{i}_{hash(result['title'])}"
@@ -936,7 +942,7 @@ with tab2:
                         'Fonte': result['source'],
                         'Data de Publicação': data_formatada,
                         'Idioma': result['language'],
-                        'Link': f"[Abrir]({result['link']})"
+                        'Link': result['link']
                     })
             
             if not todas_noticias:
@@ -1025,7 +1031,7 @@ with tab2:
                     use_container_width=True,
                     hide_index=True,
                     column_config={
-                        'Link': st.column_config.LinkColumn(),
+                        'Link': st.column_config.LinkColumn(display_text="Abrir"),
                         'Data de Publicação': st.column_config.DatetimeColumn("Data de Publicação", format="DD/MM/YYYY HH:mm")
                     }
                 )

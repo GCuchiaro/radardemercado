@@ -106,12 +106,33 @@ def clear_news_cache():
             return 0, False
     return 0, False
 
+# Função para garantir que os links tenham o formato correto
+def format_link(link):
+    """Formata um link para garantir que tenha o protocolo correto."""
+    if not link:
+        return ""
+    if not isinstance(link, str):
+        link = str(link)
+    if not link.startswith(('http://', 'https://')):
+        link = 'https://' + link.lstrip('/')
+    return link
+
 # Inicializar session_state para armazenar resultados e estado dos checkboxes
 if 'all_results' not in st.session_state:
     st.session_state.all_results = []
     
 if 'relevante_state' not in st.session_state:
     st.session_state.relevante_state = {}
+    
+# Variáveis para controle de feedback
+if 'mostrar_feedback' not in st.session_state:
+    st.session_state.mostrar_feedback = False
+    
+if 'noticias_salvas' not in st.session_state:
+    st.session_state.noticias_salvas = 0
+    
+if 'noticias_ja_existentes' not in st.session_state:
+    st.session_state.noticias_ja_existentes = 0
     
 # Flag para rastrear quando o botão de busca foi clicado
 if '_button_clicked' not in st.session_state:
@@ -258,8 +279,18 @@ def save_user_history(username, historico):
                 return obj.isoformat()
             return str(obj)
 
+        # Verificar se o histórico contém dados válidos antes de salvar
+        historico_validado = []
+        for consulta in historico:
+            if not isinstance(consulta, dict) or 'resultados' not in consulta or 'relevante_state' not in consulta:
+                print(f"Ignorando consulta inválida ao salvar histórico")
+                continue
+            historico_validado.append(consulta)
+            
+        print(f"Salvando {len(historico_validado)} consultas válidas para o usuário {username}")
+            
         with open(history_file, 'w', encoding='utf-8') as f:
-            json.dump(historico, f, ensure_ascii=False, indent=2, default=json_serializable)
+            json.dump(historico_validado, f, ensure_ascii=False, indent=2, default=json_serializable)
             
         print(f"Histórico salvo com sucesso para o usuário {username} em {history_file}")
         return True
@@ -321,32 +352,50 @@ def load_user_history(username):
             return []
             
         history_file = get_user_history_file(username)
+        print(f"Tentando carregar histórico de: {history_file}")
+        
         if os.path.exists(history_file):
             with open(history_file, 'r', encoding='utf-8') as f:
-                historico = json.load(f)
-                # Garantir que todas as consultas tenham a estrutura correta
-                historico_validado = []
-                for consulta in historico:
-                    # Verificar se todos os campos necessários existem
-                    if 'resultados' not in consulta or 'relevante_state' not in consulta:
-                        continue
-                        
-                    # Garantir que o usuário está correto
-                    consulta['usuario'] = username
+                try:
+                    historico = json.load(f)
+                    print(f"Histórico carregado com {len(historico)} consultas")
                     
-                    # Garantir que relevante_state use chaves como strings
-                    if not isinstance(next(iter(consulta['relevante_state'] or {"0": False})), str):
-                        consulta['relevante_state'] = {str(k): v for k, v in consulta['relevante_state'].items()}
+                    # Garantir que todas as consultas tenham a estrutura correta
+                    historico_validado = []
+                    for consulta in historico:
+                        # Verificar se todos os campos necessários existem
+                        if not isinstance(consulta, dict) or 'resultados' not in consulta or 'relevante_state' not in consulta:
+                            print(f"Consulta inválida encontrada e ignorada")
+                            continue
+                            
+                        # Garantir que o usuário está correto
+                        consulta['usuario'] = username
                         
-                    historico_validado.append(consulta)
-                return historico_validado
-        return []
+                        # Garantir que relevante_state use chaves como strings
+                        if consulta['relevante_state'] and not isinstance(next(iter(consulta['relevante_state'])), str):
+                            consulta['relevante_state'] = {str(k): v for k, v in consulta['relevante_state'].items()}
+                            
+                        historico_validado.append(consulta)
+                    
+                    print(f"Histórico validado com {len(historico_validado)} consultas")
+                    return historico_validado
+                except json.JSONDecodeError as e:
+                    print(f"Erro ao decodificar JSON do histórico: {e}")
+                    return []
+        else:
+            print(f"Arquivo de histórico não encontrado: {history_file}")
+            return []
     except Exception as e:
+        print(f"Erro ao carregar histórico: {e}")
         st.error(f"Erro ao carregar histórico: {e}")
         return []
 
 # Container principal para o aplicativo
 main_container = st.container()
+
+# Inicializar variável de autenticação se não existir
+if 'autenticado' not in st.session_state:
+    st.session_state.autenticado = False
 
 # Tela de login (exibida apenas se não estiver autenticado)
 if not st.session_state.autenticado:
@@ -619,9 +668,7 @@ with tab1:
                         # Atualizar texto de status
                         status_text.text(f"Buscando: '{keyword}' em {language}... ({idx+1}/{total_queries})")
                         
-                        # Converter datas para o formato esperado pelo método _fetch_news
-                        start_date_obj = datetime.datetime.strptime(start_date, '%d/%m/%Y')
-                        end_date_obj = datetime.datetime.strptime(end_date, '%d/%m/%Y')
+                        # As datas já foram convertidas e validadas anteriormente
                         
                         try:
                             # Buscar notícias
@@ -663,15 +710,122 @@ with tab1:
                 submit_button = st.form_submit_button("🔍 Buscar Notícias", type="primary", help="Clique para buscar notícias com os filtros selecionados")
                 if submit_button:
                     st.session_state._button_clicked = True
-                    realizar_busca()
-                    if not st.session_state.all_results:
-                        st.warning("⚠️ Nenhuma notícia encontrada para os critérios selecionados. Tente ajustar os filtros.")
+                    # Verificar se os campos obrigatórios estão preenchidos
+                    if not selected_keywords or not selected_languages or not start_date or not end_date:
+                        st.error("Por favor, selecione pelo menos uma palavra-chave, um idioma e o período de busca.")
+                    else:
+                        # Verificar se a data inicial é menor que a data final
+                        try:
+                            start_date_obj = datetime.datetime.strptime(start_date, '%d/%m/%Y')
+                            end_date_obj = datetime.datetime.strptime(end_date, '%d/%m/%Y')
+                            if start_date_obj > end_date_obj:
+                                st.error("A data inicial não pode ser maior que a data final.")
+                            else:
+                                realizar_busca()
+                                if not st.session_state.all_results:
+                                    st.warning("⚠️ Nenhuma notícia encontrada para os critérios selecionados. Tente ajustar os filtros.")
+                        except Exception as e:
+                            st.error(f"Erro ao processar datas: {e}")
             
             # Função de callback para atualizar o estado do checkbox
             def update_checkbox_state(i):
                 checkbox_key = f"relevante_{i}_{hash(st.session_state.all_results[i]['title'])}"
                 st.session_state.relevante_state[i] = st.session_state[checkbox_key]
-        
+                print(f"Checkbox {i} atualizado para {st.session_state.relevante_state[i]}")
+                
+            # Função para salvar notícias relevantes marcadas
+            def salvar_noticias_relevantes():
+                print("Função salvar_noticias_relevantes chamada")
+                print(f"Estado atual de relevante_state: {st.session_state.relevante_state}")
+                
+                # Garantir que temos o histórico carregado
+                if not hasattr(st.session_state, 'historico_consultas') or st.session_state.historico_consultas is None:
+                    st.session_state.historico_consultas = load_user_history(st.session_state.username)
+                    print(f"Histórico carregado: {len(st.session_state.historico_consultas)} entradas")
+                
+                noticias_salvas = 0
+                noticias_ja_existentes = 0
+                
+                # Verificar se existem notícias marcadas como relevantes
+                if not any(st.session_state.relevante_state.get(i, False) for i in range(len(st.session_state.all_results))):
+                    st.warning("Nenhuma notícia foi marcada como relevante.")
+                    return
+                
+                # Lista para armazenar notícias a serem salvas
+                noticias_para_salvar = []
+                
+                # Identificar notícias marcadas como relevantes
+                for i, resultado in enumerate(st.session_state.all_results):
+                    if st.session_state.relevante_state.get(i, False):
+                        noticia_atual = st.session_state.all_results[i].copy()  # Fazer uma cópia para evitar problemas de referência
+                        print(f"Processando notícia {i}: {noticia_atual['title']}")
+                        noticias_para_salvar.append(noticia_atual)
+                
+                # Processar cada notícia marcada como relevante
+                for noticia_atual in noticias_para_salvar:
+                    consulta_id = datetime.datetime.now(fuso_brasil).strftime('%Y%m%d_%H%M%S')
+                    relevante_state = {"0": True}  # Sempre usar índice 0 para a notícia única
+                    consulta = {
+                        'id': consulta_id,
+                        'data_hora': datetime.datetime.now(fuso_brasil).strftime('%d/%m/%Y %H:%M'),
+                        'usuario': st.session_state.username,
+                        'parametros': {
+                            'keywords': st.session_state.get('last_keywords', []),
+                            'languages': st.session_state.get('last_languages', []),
+                            'start_date': st.session_state.get('last_start_date', ''),
+                            'end_date': st.session_state.get('last_end_date', '')
+                        },
+                        'resultados': [noticia_atual],
+                        'relevante_state': relevante_state
+                    }
+                    
+                    # Verificar se a notícia já existe no histórico
+                    noticia_existente = False
+                    for c in st.session_state.historico_consultas:
+                        if 'resultados' in c and len(c['resultados']) > 0:
+                            if noticia_atual['title'] == c['resultados'][0]['title']:
+                                noticia_existente = True
+                                noticias_ja_existentes += 1
+                                print(f"Notícia já existe no histórico: {noticia_atual['title']}")
+                                break
+                    
+                    if not noticia_existente:
+                        st.session_state.historico_consultas.append(consulta)
+                        noticias_salvas += 1
+                        print(f"Notícia '{noticia_atual['title']}' adicionada para salvar no histórico.")
+                
+                # Salvar o histórico atualizado se houver notícias novas
+                if noticias_salvas > 0:
+                    save_user_history(st.session_state.username, st.session_state.historico_consultas)
+                    print(f"Histórico salvo com {noticias_salvas} novas notícias.")
+                
+                # Definir variáveis de feedback para exibir na próxima renderização
+                st.session_state.noticias_salvas = noticias_salvas
+                st.session_state.noticias_ja_existentes = noticias_ja_existentes
+                st.session_state.mostrar_feedback = True
+                
+                # Limpar os checkboxes após salvar
+                st.session_state.relevante_state = {}
+
+            # Botão para salvar notícias relevantes será exibido após os resultados
+            
+            # Verificar se há feedback para exibir
+            if st.session_state.get('mostrar_feedback', False):
+                noticias_salvas = st.session_state.get('noticias_salvas', 0)
+                noticias_ja_existentes = st.session_state.get('noticias_ja_existentes', 0)
+                
+                if noticias_salvas > 0:
+                    st.success(f"{noticias_salvas} notícia(s) relevante(s) salva(s) no histórico!")
+                    if noticias_ja_existentes > 0:
+                        st.info(f"{noticias_ja_existentes} notícia(s) já existiam no histórico.")
+                elif noticias_ja_existentes > 0:
+                    st.info(f"Todas as {noticias_ja_existentes} notícia(s) já existiam no histórico.")
+                
+                # Limpar as variáveis de feedback
+                st.session_state.mostrar_feedback = False
+                st.session_state.noticias_salvas = 0
+                st.session_state.noticias_ja_existentes = 0
+            
             # Exibir resultados se existirem na session_state
             if st.session_state.all_results:
                 # Exibir tabela de resultados
@@ -680,56 +834,6 @@ with tab1:
                 # Botões de ação no final da tabela
                 st.markdown("---")
                 col1, col2 = st.columns(2)
-                
-                with col2:
-                    # Botão para salvar notícias relevantes
-                    if st.button("💾 Salvar Notícias Relevantes", type="primary", help="Salvar as notícias marcadas como relevantes no histórico"):
-                        # Filtrar apenas as notícias marcadas como relevantes
-                        noticias_relevantes = []
-                        for i, result in enumerate(st.session_state.all_results):
-                            if st.session_state.relevante_state.get(i, False):
-                                noticias_relevantes.append(result)
-                    
-                        if not noticias_relevantes:
-                            st.warning("Nenhuma notícia foi marcada como relevante.")
-                        else:
-                            # Criar um ID único para a consulta baseado na data/hora
-                            consulta_id = datetime.datetime.now(fuso_brasil).strftime('%Y%m%d_%H%M%S')
-                            
-                            # Criar dicionário de relevância apenas para as notícias relevantes
-                            relevante_state = {str(i): True for i in range(len(noticias_relevantes))}
-                            
-                            # Salvar parâmetros e resultados da consulta
-                            consulta = {
-                                'id': consulta_id,
-                                'data_hora': datetime.datetime.now(fuso_brasil).strftime('%d/%m/%Y %H:%M'),
-                                'usuario': st.session_state.username,
-                                'parametros': {
-                                    'keywords': selected_keywords,
-                                    'languages': selected_languages,
-                                    'period': period_option,
-                                    'start_date': start_date,
-                                    'end_date': end_date
-                                },
-                                'resultados': noticias_relevantes,
-                                'relevante_state': relevante_state
-                            }
-                            
-                            # Garantir que o histórico existe na sessão
-                            if 'historico_consultas' not in st.session_state:
-                                st.session_state.historico_consultas = []
-                            
-                            # Adicionar ao histórico (no início da lista para mostrar mais recentes primeiro)
-                            st.session_state.historico_consultas.insert(0, consulta)
-                            
-                            try:
-                                # Salvar o histórico do usuário
-                                if save_user_history(st.session_state.username, st.session_state.historico_consultas):
-                                    st.success(f"{len(noticias_relevantes)} notícias relevantes salvas no histórico!")
-                                else:
-                                    st.error("Não foi possível salvar as notícias no histórico.")
-                            except Exception as e:
-                                st.error(f"Erro ao salvar notícias no histórico: {e}")
                 
                 # Criar cabeçalho da tabela
                 header_cols = st.columns([0.05, 0.15, 0.35, 0.2, 0.1, 0.15])
@@ -754,13 +858,10 @@ with tab1:
                     row_cols[1].write(result['keyword'])
                     row_cols[2].write(result['title'])
                     row_cols[3].write(data_formatada)
-                    # Corrigindo o link para garantir que abra corretamente
-                    link = result['link']
-                    # Garantir que o link tenha o protocolo http/https
-                    if not link.startswith(('http://', 'https://')):
-                        link = 'https://' + link.lstrip('/')
+                                        # Formatar o link usando a função auxiliar
+                    link = format_link(result['link'])
                     # Usar o componente de link do Streamlit para melhor compatibilidade
-                    row_cols[4].markdown(f"<a href='{link}' target='_blank'>Abrir</a>", unsafe_allow_html=True)
+                    row_cols[4].markdown(f"<a href='{link}' target='_blank' style='display: inline-block; padding: 5px 10px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 4px;'>Abrir</a>", unsafe_allow_html=True)
                     
                     # Checkbox para marcar como relevante
                     checkbox_key = f"relevante_{i}_{hash(result['title'])}"
@@ -792,6 +893,15 @@ with tab1:
                 
                 # Converter para CSV
                 csv = csv_data.to_csv(index=False)
+                
+                # Adicionar botão para salvar notícias relevantes após a tabela
+                st.markdown("---")
+                col_btn1, col_btn2 = st.columns(2)
+                
+                with col_btn2:
+                    # Botão para salvar notícias relevantes com chave fixa
+                    if st.button("Salvar Notícias Relevantes", type="primary", key="btn_salvar_noticias_fixo"):
+                        salvar_noticias_relevantes()
                 
                 with col1:
                     # Botão para download direto em CSV
@@ -884,19 +994,7 @@ with tab2:
                     )
                 else:
                     st.info("Não há notícias relevantes no histórico para exportar.")
-                    
-            with col2:
-                # Botão para exportar notícias filtradas
-                # Verificar se temos notícias filtradas na sessão
-                if st.session_state.get('tem_noticias_filtradas', False):
-                    st.download_button(
-                        label="📥 Exportar Notícias Filtradas (CSV)",
-                        data=st.session_state.csv_filtrado,
-                        file_name=f"noticias_filtradas_{datetime.datetime.now(fuso_brasil).strftime('%Y%m%d_%H%M%S')}.csv",
-                        mime="text/csv",
-                        help=f"Baixe as {st.session_state.total_noticias_filtradas} notícias filtradas em formato CSV"
-                    )
-                    
+
             with col3:
                 # Botão para limpar o histórico
                 if st.button("🗑️ Limpar Histórico", type="secondary", help="Excluir todo o histórico de notícias salvas"):
@@ -919,129 +1017,148 @@ with tab2:
                         st.warning("Tem certeza que deseja excluir todo o histórico de notícias? Esta ação não pode ser desfeita. Clique novamente para confirmar.")
             
             # Coletar todas as notícias relevantes de todas as consultas
-            st.subheader("Todas as Notícias Relevantes")
+            col_header, col_refresh = st.columns([5, 1])
+            with col_header:
+                st.subheader("Todas as Notícias Relevantes")
+            with col_refresh:
+                # Definir flag para recarregar o histórico
+                if 'recarregar_historico' not in st.session_state:
+                    st.session_state.recarregar_historico = False
+                    
+                if st.button("🔄 Atualizar", help="Atualizar a tabela de notícias relevantes", key="btn_atualizar_historico"):
+                    # Definir flag para recarregar o histórico
+                    st.session_state.recarregar_historico = True
+                    st.rerun()
+                    
+                # Verificar se é necessário recarregar o histórico
+                if st.session_state.recarregar_historico:
+                    # Limpar o cache de notícias adicionadas
+                    if 'noticias_adicionadas' in st.session_state:
+                        del st.session_state.noticias_adicionadas
+                    
+                    # Recarregar o histórico do usuário
+                    st.session_state.historico_consultas = load_user_history(st.session_state.username)
+                    print(f"Histórico recarregado via botão de atualização: {len(st.session_state.historico_consultas)} consultas")
+                    st.success("Histórico atualizado com sucesso!")
+                    
+                    # Limpar a flag
+                    st.session_state.recarregar_historico = False
             
             # Preparar dados para a tabela de notícias
             todas_noticias = []
+            # Dicionário para rastrear notícias já adicionadas e evitar duplicação
+            if 'noticias_adicionadas' not in st.session_state:
+                st.session_state.noticias_adicionadas = {}
+            noticias_adicionadas = st.session_state.noticias_adicionadas.copy()  # Usar uma cópia para evitar modificações durante a iteração
+            
+            # Limpar o dicionário de notícias adicionadas se estiver muito grande
+            if len(noticias_adicionadas) > 1000:
+                st.session_state.noticias_adicionadas = {}
+                noticias_adicionadas = {}
+            
+            # Garantir que o histórico está carregado
+            if 'historico_consultas' not in st.session_state or not st.session_state.historico_consultas:
+                st.session_state.historico_consultas = load_user_history(st.session_state.username)
+                print(f"Recarregado histórico com {len(st.session_state.historico_consultas)} consultas")
+                
+            # Exibir informações de debug sobre o histórico
+            print(f"Processando {len(st.session_state.historico_consultas)} consultas no histórico")
+            
             for i, consulta in enumerate(st.session_state.historico_consultas):
+                # Verificar se a consulta tem a estrutura correta
+                if not isinstance(consulta, dict) or 'resultados' not in consulta or 'relevante_state' not in consulta:
+                    continue
+                    
                 # Filtrar apenas notícias relevantes
-                noticias_relevantes = [result for j, result in enumerate(consulta['resultados']) 
-                                      if consulta['relevante_state'].get(str(j), False)]
+                noticias_relevantes = []
+                for j, result in enumerate(consulta['resultados']):
+                    # Verificar se a notícia é relevante
+                    if consulta['relevante_state'].get(str(j), False):
+                        # Adicionar informações de debug
+                        print(f"Notícia relevante encontrada: {result.get('title', 'Sem título')}")
+                        # Verificar se a notícia tem os campos necessários antes de adicionar
+                        if isinstance(result, dict) and 'title' in result and 'link' in result:
+                            noticias_relevantes.append(result)
                 
                 # Adicionar cada notícia relevante à lista
                 for result in noticias_relevantes:
-                    # Formatar a data para exibição
-                    data_publicacao = parser.parse(result['published'])
-                    data_formatada = data_publicacao.strftime('%d/%m/%Y %H:%M')
-                    
-                    # Adicionar dados da notícia
-                    todas_noticias.append({
-                        'Data da Consulta': consulta['data_hora'],
-                        'Palavra-chave': result['keyword'],
-                        'Título': result['title'],
-                        'Fonte': result['source'],
-                        'Data de Publicação': data_formatada,
-                        'Idioma': result['language'],
-                        'Link': result['link']
-                    })
+                    # Verificar se a notícia tem os campos necessários
+                    if not isinstance(result, dict) or 'title' not in result or 'link' not in result:
+                        print(f"Notícia ignorada por falta de campos obrigatórios")
+                        continue
+                        
+                    print(f"Processando notícia: {result.get('title', 'Sem título')}")
+                    try:
+                        # Formatar a data para exibição
+                        if 'published' in result:
+                            data_publicacao = parser.parse(result['published'])
+                            data_formatada = data_publicacao.strftime('%d/%m/%Y %H:%M')
+                        else:
+                            data_formatada = "N/A"
+                        
+                        # Adicionar dados da notícia
+                        todas_noticias.append({
+                            'Data da Consulta': consulta.get('data_hora', 'N/A'),
+                            'Palavra-chave': result.get('keyword', 'N/A'),
+                            'Título': result.get('title', 'N/A'),
+                            'Fonte': result.get('source', 'N/A'),
+                            'Data de Publicação': data_formatada,
+                            'Idioma': result.get('language', 'N/A'),
+                            'Link': result.get('link', '')
+                        })
+                        
+                        print(f"Notícia adicionada à tabela: {result.get('title', 'Sem título')}")
+                    except Exception as e:
+                        print(f"Erro ao processar notícia: {e}")
             
             if not todas_noticias:
                 st.info("Nenhuma notícia foi marcada como relevante em suas consultas.")
             else:
                 # Criar DataFrame para a tabela de notícias
-                df_todas_noticias = pd.DataFrame(todas_noticias)
+                # Verificar se há notícias para exibir
+                print(f"Total de notícias relevantes encontradas: {len(todas_noticias)}")
                 
-                # Inicializar variáveis de filtro no session_state se não existirem
-                if 'filtro_palavras' not in st.session_state:
-                    st.session_state.filtro_palavras = ["Todas"]
-                if 'filtro_idiomas' not in st.session_state:
-                    st.session_state.filtro_idiomas = ["Todos"]
-                if 'df_filtrado' not in st.session_state:
-                    st.session_state.df_filtrado = df_todas_noticias.copy()
+                # Formatar os links antes de criar o DataFrame
+                for noticia in todas_noticias:
+                    if 'Link' in noticia and noticia['Link']:
+                        noticia['Link'] = format_link(noticia['Link'])
                 
-                # Funções para atualizar os filtros sem recarregar a página
-                def atualizar_filtro_palavras():
-                    st.session_state.filtro_palavras = st.session_state.palavras_multiselect
+                # Criar DataFrame apenas se houver notícias
+                df_todas_noticias = pd.DataFrame(todas_noticias) if todas_noticias else pd.DataFrame(columns=[
+                    'Data da Consulta', 'Palavra-chave', 'Título', 'Fonte', 
+                    'Data de Publicação', 'Idioma', 'Link'
+                ])
                 
-                def atualizar_filtro_idiomas():
-                    st.session_state.filtro_idiomas = st.session_state.idiomas_multiselect
-                
-                def aplicar_filtros():
-                    # Atualizar os filtros manualmente a partir das seleções atuais
-                    st.session_state.filtro_palavras = st.session_state.palavras_multiselect
-                    st.session_state.filtro_idiomas = st.session_state.idiomas_multiselect
+                # Exibir resultados
+                total_noticias = len(todas_noticias)
+
+                if total_noticias > 0:
+                    st.write(f"Exibindo **{total_noticias}** notícias relevantes")
                     
-                    # Aplicar filtros ao DataFrame
-                    df_temp = df_todas_noticias.copy()
-                    
-                    # Filtro por palavra-chave
-                    if "Todas" not in st.session_state.filtro_palavras and st.session_state.filtro_palavras:
-                        df_temp = df_temp[df_temp['Palavra-chave'].isin(st.session_state.filtro_palavras)]
-                    
-                    # Filtro por idioma
-                    if "Todos" not in st.session_state.filtro_idiomas and st.session_state.filtro_idiomas:
-                        df_temp = df_temp[df_temp['Idioma'].isin(st.session_state.filtro_idiomas)]
-                    
-                    # Atualizar o DataFrame filtrado no session_state
-                    st.session_state.df_filtrado = df_temp
-                    
-                    # Preparar dados para exportação
+                    # Exibir tabela de notícias
+                    st.dataframe(
+                        df_todas_noticias,
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config={
+                            'Link': st.column_config.LinkColumn(display_text="Abrir"),
+                            'Data de Publicação': st.column_config.DatetimeColumn("Data de Publicação", format="DD/MM/YYYY HH:mm")
+                        }
+                    )
+                else:
+                    st.info("Nenhuma notícia foi marcada como relevante em suas consultas.")
+
+                # Atualizar dados para exportação
+                if not df_todas_noticias.empty:
                     st.session_state.tem_noticias_filtradas = True
-                    st.session_state.csv_filtrado = df_temp.to_csv(index=False)
-                    st.session_state.total_noticias_filtradas = len(df_temp)
-                
-                # Opções de filtro
-                st.subheader("Filtros")
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    # Filtro por palavra-chave
-                    palavras_chave_unicas = sorted(list(set(df_todas_noticias['Palavra-chave'])))
-                    st.multiselect(
-                        "Filtrar por palavra-chave:",
-                        options=["Todas"] + palavras_chave_unicas,
-                        default=st.session_state.filtro_palavras,
-                        key="palavras_multiselect",
-                        help="Selecione 'Todas' para mostrar todas as palavras-chave ou escolha palavras-chave específicas"
-                    )
-                
-                with col2:
-                    # Filtro por idioma
-                    idiomas_unicos = sorted(list(set(df_todas_noticias['Idioma'])))
-                    st.multiselect(
-                        "Filtrar por idioma:",
-                        options=["Todos"] + idiomas_unicos,
-                        default=st.session_state.filtro_idiomas,
-                        key="idiomas_multiselect",
-                        help="Selecione 'Todos' para mostrar todos os idiomas ou escolha idiomas específicos"
-                    )
-                
-                # Botão para aplicar filtros
-                st.button("Aplicar Filtros", on_click=aplicar_filtros, type="primary")
-                
-                # Usar o DataFrame filtrado do session_state
-                df_filtrado = st.session_state.df_filtrado
-                
-                # Exibir contagem de resultados filtrados
-                st.write(f"Exibindo **{len(df_filtrado)}** de **{len(todas_noticias)}** notícias relevantes")
-                
-                # Exibir tabela de notícias
-                st.dataframe(
-                    df_filtrado,
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config={
-                        'Link': st.column_config.LinkColumn(display_text="Abrir"),
-                        'Data de Publicação': st.column_config.DatetimeColumn("Data de Publicação", format="DD/MM/YYYY HH:mm")
-                    }
-                )
-                
+                    st.session_state.csv_filtrado = df_todas_noticias.to_csv(index=False)
+                    st.session_state.total_noticias_filtradas = len(df_todas_noticias)
+                else:
+                    st.session_state.tem_noticias_filtradas = False
+
                 # Verificar se já temos notícias filtradas no session_state
                 if not st.session_state.get('tem_noticias_filtradas', False):
-                    # Inicialização padrão para o caso de primeira carga da página
-                    st.session_state.tem_noticias_filtradas = True
-                    st.session_state.csv_filtrado = df_filtrado.to_csv(index=False)
-                    st.session_state.total_noticias_filtradas = len(df_filtrado)
+                    st.info("Nenhuma notícia foi marcada como relevante em suas consultas.")
                 
             # Botão para mostrar detalhes das consultas
             with st.expander("Detalhes das Consultas"):
@@ -1051,9 +1168,16 @@ with tab2:
                     # Exibir parâmetros da consulta
                     st.write(f"**Palavras-chave:** {', '.join(consulta['parametros']['keywords'])}")
                     st.write(f"**Idiomas:** {', '.join(consulta['parametros']['languages'])}")
-                    st.write(f"**Período:** {consulta['parametros']['period']}")
-                    st.write(f"**Data inicial:** {consulta['parametros']['start_date']}")
-                    st.write(f"**Data final:** {consulta['parametros']['end_date']}")
+                    
+                    # Verificar se as datas existem nos parâmetros
+                    start_date = consulta['parametros'].get('start_date', 'N/A')
+                    end_date = consulta['parametros'].get('end_date', 'N/A')
+                    
+                    # Exibir período de datas
+                    if start_date != 'N/A' and end_date != 'N/A':
+                        st.write(f"**Período:** {start_date} a {end_date}")
+                    else:
+                        st.write("**Período:** Não especificado")
                     
                     # Contar notícias relevantes
                     noticias_relevantes = [result for j, result in enumerate(consulta['resultados']) 

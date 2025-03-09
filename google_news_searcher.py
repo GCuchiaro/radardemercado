@@ -39,6 +39,23 @@ import os
 import json
 import urllib.parse
 import requests
+import random
+import logging
+import pickle
+from pathlib import Path
+import re
+import backoff
+
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("google_news_searcher.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger("GoogleNewsSearcher")
 
 class GoogleNewsSearcher:
     def __init__(self):
@@ -49,6 +66,11 @@ class GoogleNewsSearcher:
             'pt': {'hl': 'pt-BR', 'gl': 'BR', 'ceid': 'BR:pt-419', 'name': 'Português'},
             'en': {'hl': 'en-US', 'gl': 'US', 'ceid': 'US:en', 'name': 'Inglês'}
         }
+        
+        # Configuração do cache
+        self.cache_dir = Path(os.path.dirname(os.path.abspath(__file__))) / "cache"
+        self.cache_dir.mkdir(exist_ok=True)
+        self.cache_expiry = datetime.timedelta(hours=6)  # Cache expira após 6 horas
         self.load_keywords()
         
     def load_keywords(self):
@@ -245,53 +267,217 @@ class GoogleNewsSearcher:
             print("\nNenhuma notícia encontrada para as palavras-chave e período especificados.")
             return []
     
+    def _get_cache_key(self, keyword, start_date, end_date, language):
+        """Generate a unique cache key for the query"""
+        start_str = start_date.strftime('%Y%m%d')
+        end_str = end_date.strftime('%Y%m%d')
+        return f"{keyword}_{language}_{start_str}_{end_str}".replace(' ', '_')
+    
+    def _get_cached_results(self, cache_key):
+        """Get cached results if they exist and are not expired"""
+        cache_file = self.cache_dir / f"{cache_key}.pkl"
+        
+        if not cache_file.exists():
+            return None
+            
+        try:
+            # Check if cache is expired
+            file_time = datetime.datetime.fromtimestamp(cache_file.stat().st_mtime)
+            if datetime.datetime.now() - file_time > self.cache_expiry:
+                logger.info(f"Cache expired for {cache_key}")
+                return None
+                
+            # Load cache
+            with open(cache_file, 'rb') as f:
+                cached_data = pickle.load(f)
+                logger.info(f"Loaded {len(cached_data)} results from cache for {cache_key}")
+                return cached_data
+        except Exception as e:
+            logger.error(f"Error loading cache: {e}")
+            return None
+    
+    def _save_to_cache(self, cache_key, results):
+        """Save results to cache"""
+        if not results:
+            return
+            
+        cache_file = self.cache_dir / f"{cache_key}.pkl"
+        try:
+            with open(cache_file, 'wb') as f:
+                pickle.dump(results, f)
+            logger.info(f"Saved {len(results)} results to cache for {cache_key}")
+        except Exception as e:
+            logger.error(f"Error saving to cache: {e}")
+    
+    def _parse_date(self, date_str):
+        """Enhanced date parsing with multiple formats"""
+        # Lista de formatos de data comuns
+        formats = [
+            # Formatos padrão
+            '%a, %d %b %Y %H:%M:%S %z',  # RFC 822
+            '%a, %d %b %Y %H:%M:%S %Z',
+            '%Y-%m-%dT%H:%M:%S%z',       # ISO 8601
+            '%Y-%m-%dT%H:%M:%S.%f%z',
+            '%Y-%m-%d %H:%M:%S',
+            '%d/%m/%Y %H:%M:%S',
+            '%d/%m/%Y %H:%M',
+            '%d/%m/%Y',
+            # Formatos em português
+            '%d de %b de %Y',
+            '%d %b %Y',
+            '%d %B %Y',
+        ]
+        
+        # Tentar formatos conhecidos primeiro
+        for fmt in formats:
+            try:
+                return datetime.datetime.strptime(date_str, fmt)
+            except ValueError:
+                continue
+        
+        # Tentar extrair data com regex
+        try:
+            # Procurar padrões como "5 horas atrás", "2 dias atrás", etc.
+            time_ago_match = re.search(r'(\d+)\s+(minutos?|horas?|dias?|semanas?)\s+atrás', date_str, re.IGNORECASE)
+            if time_ago_match:
+                num, unit = time_ago_match.groups()
+                num = int(num)
+                now = datetime.datetime.now()
+                
+                if 'minuto' in unit:
+                    return now - datetime.timedelta(minutes=num)
+                elif 'hora' in unit:
+                    return now - datetime.timedelta(hours=num)
+                elif 'dia' in unit:
+                    return now - datetime.timedelta(days=num)
+                elif 'semana' in unit:
+                    return now - datetime.timedelta(weeks=num)
+        except Exception:
+            pass
+        
+        # Usar o parser da dateutil como último recurso
+        return parser.parse(date_str)
+    
+    @backoff.on_exception(backoff.expo, 
+                          (requests.exceptions.RequestException, 
+                           Exception), 
+                          max_tries=3, 
+                          jitter=backoff.full_jitter)
+    def _fetch_rss_feed(self, url):
+        """Fetch and parse RSS feed with retry logic"""
+        try:
+            feed = feedparser.parse(url)
+            if not feed or not hasattr(feed, 'entries') or len(feed.entries) == 0:
+                logger.warning(f"No entries found in feed from {url}")
+            return feed
+        except Exception as e:
+            logger.error(f"Error fetching RSS feed from {url}: {e}")
+            raise
+    
     def _fetch_news(self, keyword, start_date, end_date, language='pt'):
-        """Fetch news from Google News RSS feed for a specific keyword"""
+        """Fetch news from Google News RSS feed for a specific keyword with enhancements"""
+        # Check cache first
+        cache_key = self._get_cache_key(keyword, start_date, end_date, language)
+        cached_results = self._get_cached_results(cache_key)
+        if cached_results is not None:
+            return cached_results
+        
         # URL encode the keyword
         encoded_keyword = urllib.parse.quote(keyword)
         
         # Get language configuration
         lang_config = self.language_configs[language]
         
-        # Google News RSS URL
-        url = f"https://news.google.com/rss/search?q={encoded_keyword}&hl={lang_config['hl']}&gl={lang_config['gl']}&ceid={lang_config['ceid']}"
+        # Lista para armazenar todas as notícias
+        all_results = []
         
-        try:
-            # Parse the RSS feed
-            feed = feedparser.parse(url)
+        # Implementação de consultas múltiplas com variações para obter mais resultados
+        query_variations = [
+            # Consulta padrão
+            f"https://news.google.com/rss/search?q={encoded_keyword}&hl={lang_config['hl']}&gl={lang_config['gl']}&ceid={lang_config['ceid']}",
+            # Consulta com aspas para busca exata
+            f"https://news.google.com/rss/search?q=%22{encoded_keyword}%22&hl={lang_config['hl']}&gl={lang_config['gl']}&ceid={lang_config['ceid']}",
+            # Consulta com ordenação por data (quando disponível)
+            f"https://news.google.com/rss/search?q={encoded_keyword}&hl={lang_config['hl']}&gl={lang_config['gl']}&ceid={lang_config['ceid']}&sort=date"
+        ]
+        
+        # Adicionar variações com palavras relacionadas ao domínio financeiro
+        if language == 'pt':
+            domain_terms = ['mercado', 'finanças', 'economia', 'negócios']
+        else:  # 'en'
+            domain_terms = ['market', 'finance', 'economy', 'business']
             
-            results = []
-            for entry in feed.entries:
-                # Parse the publication date
-                try:
-                    pub_date = parser.parse(entry.published)
-                    
-                    # Convert aware datetime to naive datetime for comparison
-                    if pub_date.tzinfo is not None:
-                        # Convert to UTC and then remove timezone info
-                        pub_date = pub_date.astimezone(datetime.timezone.utc).replace(tzinfo=None)
-                    
-                    # Check if the publication date is within the specified range
-                    if start_date <= pub_date <= end_date:
-                        # Criar um dicionário com os dados básicos da notícia
-                        news_item = {
-                            'title': entry.title,
-                            'link': entry.link,
-                            'published': pub_date.strftime('%d/%m/%Y %H:%M'),
-                            'source': entry.source.title if hasattr(entry, 'source') else "Google News",
-                            'keyword': keyword,
-                            'language': self.language_configs[language]['name']
-                        }
+        # Adicionar algumas variações com termos de domínio (mas não muitas para não sobrecarregar)
+        for term in random.sample(domain_terms, min(2, len(domain_terms))):
+            term_encoded = urllib.parse.quote(term)
+            query_variations.append(
+                f"https://news.google.com/rss/search?q={encoded_keyword}+{term_encoded}&hl={lang_config['hl']}&gl={lang_config['gl']}&ceid={lang_config['ceid']}"
+            )
+        
+        # Processar cada variação de consulta
+        for url in query_variations:
+            try:
+                logger.info(f"Fetching news from {url}")
+                feed = self._fetch_rss_feed(url)
+                
+                for entry in feed.entries:
+                    # Verificar se a notícia já foi adicionada (evitar duplicatas)
+                    if any(r.get('link') == entry.link for r in all_results):
+                        continue
                         
-                        results.append(news_item)
-                except Exception as e:
-                    print(f"Erro ao processar data de publicação: {e}")
-                    continue
-            
-            return results
-        except Exception as e:
-            print(f"Erro ao buscar notícias: {e}")
-            return []
+                    # Parse the publication date with enhanced error handling
+                    try:
+                        # Tentar vários métodos de parsing de data
+                        try:
+                            pub_date = self._parse_date(entry.published)
+                        except Exception:
+                            # Se falhar, tentar extrair a data do título ou descrição
+                            if hasattr(entry, 'title'):
+                                match = re.search(r'\d{1,2}/\d{1,2}/\d{2,4}|\d{1,2}\s+(?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\w*\s+\d{2,4}', 
+                                                  entry.title, re.IGNORECASE)
+                                if match:
+                                    pub_date = self._parse_date(match.group(0))
+                                else:
+                                    # Se não encontrar data, usar a data atual menos 1 dia (aproximação razoável)
+                                    pub_date = datetime.datetime.now() - datetime.timedelta(days=1)
+                            else:
+                                # Último recurso: usar a data atual
+                                pub_date = datetime.datetime.now()
+                        
+                        # Convert aware datetime to naive datetime for comparison
+                        if pub_date.tzinfo is not None:
+                            # Convert to UTC and then remove timezone info
+                            pub_date = pub_date.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+                        
+                        # Check if the publication date is within the specified range
+                        if start_date <= pub_date <= end_date:
+                            # Criar um dicionário com os dados básicos da notícia
+                            news_item = {
+                                'title': entry.title,
+                                'link': entry.link,
+                                'published': pub_date.strftime('%d/%m/%Y %H:%M'),
+                                'source': entry.source.title if hasattr(entry, 'source') else "Google News",
+                                'keyword': keyword,
+                                'language': self.language_configs[language]['name']
+                            }
+                            
+                            # Adicionar descrição se disponível
+                            if hasattr(entry, 'summary'):
+                                news_item['description'] = entry.summary
+                            
+                            all_results.append(news_item)
+                    except Exception as e:
+                        logger.error(f"Erro ao processar data de publicação: {e}")
+                        continue
+            except Exception as e:
+                logger.error(f"Erro ao processar feed {url}: {e}")
+                # Continue para a próxima variação em vez de falhar completamente
+                continue
+        
+        # Salvar resultados no cache
+        self._save_to_cache(cache_key, all_results)
+        
+        return all_results
     
 
     

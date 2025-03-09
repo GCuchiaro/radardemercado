@@ -92,6 +92,20 @@ def get_searcher():
 
 searcher = get_searcher()
 
+# Função para limpar o cache de notícias
+def clear_news_cache():
+    cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
+    if os.path.exists(cache_dir):
+        try:
+            files = [os.path.join(cache_dir, f) for f in os.listdir(cache_dir) if f.endswith('.pkl')]
+            for file in files:
+                os.remove(file)
+            return len(files), True
+        except Exception as e:
+            st.error(f"Erro ao limpar cache: {e}")
+            return 0, False
+    return 0, False
+
 # Inicializar session_state para armazenar resultados e estado dos checkboxes
 if 'all_results' not in st.session_state:
     st.session_state.all_results = []
@@ -262,6 +276,44 @@ def save_user_history(username, historico):
         print(f"Erro inesperado para {username}: {e}")
         return False
 
+# Função para limpar o histórico de notícias do usuário
+def clear_user_history(username):
+    try:
+        if not username or not username.strip():
+            st.error("Erro: Nome de usuário vazio. Não é possível limpar o histórico.")
+            print("Tentativa de limpar histórico com nome de usuário vazio.")
+            return False
+            
+        # Obter o caminho do arquivo de histórico
+        try:
+            history_file = get_user_history_file(username)
+        except Exception as e:
+            st.error("Erro: Caminho do arquivo de histórico inválido.")
+            print(f"Erro ao obter caminho do arquivo para limpar histórico: {e}")
+            return False
+            
+        # Verificar se o arquivo existe
+        if os.path.exists(history_file):
+            try:
+                # Salvar um histórico vazio (lista vazia)
+                with open(history_file, 'w', encoding='utf-8') as f:
+                    json.dump([], f, ensure_ascii=False, indent=2)
+                print(f"Histórico limpo com sucesso para o usuário {username}")
+                return True
+            except PermissionError as e:
+                st.error(f"Erro de permissão ao limpar histórico: {e}")
+                return False
+            except Exception as e:
+                st.error(f"Erro inesperado ao limpar histórico: {e}")
+                return False
+        else:
+            # Se o arquivo não existe, consideramos que o histórico já está limpo
+            print(f"Arquivo de histórico não encontrado para o usuário {username}. Nada a limpar.")
+            return True
+    except Exception as e:
+        st.error(f"Erro ao limpar histórico: {e}")
+        return False
+
 def load_user_history(username):
     try:
         if not username or not username.strip():
@@ -384,7 +436,7 @@ if not st.session_state.autenticado:
 st.title("📰 Radar de Mercado IBBA")
 
 # Criação de abas (disponíveis para todos, mas conteúdo protegido)
-tab1, tab2, tab3, tab4 = st.tabs(["Buscar Notícias", "Histórico de Consultas", "Gerenciar Palavras-chave", "Sobre"])
+tab1, tab2, tab3, tab4 = st.tabs(["Buscar Notícias", "Histórico de Consultas", "Gerenciar Palavras-chave", "Estatísticas"])
 
 # Conteúdo principal do aplicativo (exibido apenas se estiver autenticado)
 if st.session_state.autenticado:
@@ -392,6 +444,45 @@ if st.session_state.autenticado:
     
     # Exibir informações do usuário logado na barra lateral
     st.sidebar.write(f"Usuário: **{st.session_state.username}**")
+    
+    # Opções de otimização no sidebar
+    with st.sidebar.expander("Opções de Otimização"):
+        if st.button("🔄 Limpar Cache de Notícias", help="Remove arquivos de cache para liberar espaço e forçar novas consultas"):
+            num_files, success = clear_news_cache()
+            if success:
+                st.success(f"Cache limpo com sucesso! {num_files} arquivos removidos.")
+            else:
+                st.error("Não foi possível limpar o cache.")
+    
+    # Seção Sobre no sidebar
+    with st.sidebar.expander("Sobre o Radar de Mercado"):
+        st.markdown("""
+        ### Descrição
+        O Radar de Mercado IBBA é uma aplicação que monitora notícias do Google News relacionadas 
+        a palavras-chave específicas, facilitando a análise de informações relevantes para o 
+        mercado financeiro.
+
+        ### Funcionalidades
+        - Busca de notícias em PT/EN
+        - Cadastro de palavras-chave
+        - Filtragem por período
+        - Marcação de relevância
+        - Exportação para CSV
+        - Histórico de consultas
+        
+        ### Como usar
+        1. Faça login com a senha fornecida
+        2. Cadastre suas palavras-chave de interesse na aba "Gerenciar Palavras-chave"
+        3. Na aba "Buscar Notícias", selecione as palavras-chave, idiomas e período desejado
+        4. Clique em "Buscar Notícias" para obter os resultados
+        5. Marque as notícias relevantes usando os checkboxes na tabela
+        6. Baixe os resultados em formato CSV para análise detalhada
+        7. Acesse suas consultas anteriores na aba "Histórico de Consultas"
+        
+        ### Desenvolvido para
+        Esta aplicação foi desenvolvida exclusivamente para o IBBA como ferramenta de 
+        monitoramento de notícias e informações de mercado.
+        """)
     
     # Botão de logout
     if st.sidebar.button("Sair"):
@@ -509,13 +600,34 @@ with tab1:
                 # Removido o spinner duplicado
                 all_results = []
                 
-                # Buscar para cada palavra-chave e idioma sem mostrar status parcial
-                for keyword in selected_keywords:
-                    for language in selected_languages:
+                # Usar processamento paralelo para melhorar desempenho
+                import concurrent.futures
+                import threading
+                
+                # Criar uma barra de progresso
+                progress_placeholder = st.empty()
+                status_text = st.empty()
+                progress_bar = progress_placeholder.progress(0)
+                
+                # Calcular o total de consultas a serem feitas
+                total_queries = len(selected_keywords) * len(selected_languages)
+                completed = 0
+                lock = threading.Lock()
+                
+                # Função para buscar notícias para um par keyword-language
+                def fetch_for_pair(args):
+                    nonlocal completed
+                    keyword, language = args
+                    
+                    try:
                         # Converter datas para o formato esperado pelo método _fetch_news
                         start_date_obj = datetime.datetime.strptime(start_date, '%d/%m/%Y')
                         end_date_obj = datetime.datetime.strptime(end_date, '%d/%m/%Y')
                         
+                        # Atualizar texto de status
+                        status_text.text(f"Buscando: '{keyword}' em {language}... ({completed+1}/{total_queries})")
+                        
+                        # Buscar notícias
                         results = searcher._fetch_news(
                             keyword, 
                             start_date_obj, 
@@ -523,8 +635,33 @@ with tab1:
                             language
                         )
                         
-                        if results:
-                            all_results.extend(results)
+                        # Atualizar contador e barra de progresso
+                        with lock:
+                            completed += 1
+                            progress_bar.progress(completed / total_queries)
+                        
+                        return results or []
+                    except Exception as e:
+                        print(f"Erro ao buscar notícias para {keyword} em {language}: {e}")
+                        with lock:
+                            completed += 1
+                            progress_bar.progress(completed / total_queries)
+                        return []
+                
+                # Criar lista de tarefas (pares keyword-language)
+                tasks = [(k, l) for k in selected_keywords for l in selected_languages]
+                
+                # Executar buscas em paralelo com no máximo 3 workers para não sobrecarregar
+                with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                    results_lists = list(executor.map(fetch_for_pair, tasks))
+                
+                # Combinar todos os resultados
+                for results in results_lists:
+                    all_results.extend(results)
+                    
+                # Limpar elementos temporários
+                progress_placeholder.empty()
+                status_text.empty()
                 
                 # Ordenar por data (mais recentes primeiro) se houver resultados
                 if all_results:
@@ -730,99 +867,217 @@ with tab2:
         if not st.session_state.historico_consultas:
             st.info("Nenhuma consulta salva no histórico. Realize buscas na aba 'Buscar Notícias' para salvá-las aqui.")
         else:
-            col1, col2 = st.columns([0.7, 0.3])
+            # Informações gerais e resumo
+            st.write(f"Total de consultas: **{len(st.session_state.historico_consultas)}**")
+            
+            # Contar o total de notícias relevantes em todas as consultas
+            total_noticias_relevantes = 0
+            for consulta in st.session_state.historico_consultas:
+                noticias_relevantes = [result for j, result in enumerate(consulta['resultados']) 
+                                      if consulta['relevante_state'].get(str(j), False)]
+                total_noticias_relevantes += len(noticias_relevantes)
+            
+            st.write(f"Total de notícias relevantes: **{total_noticias_relevantes}**")
+            
+            # Seção de botões de exportação e gerenciamento
+            st.subheader("Opções de Exportação e Gerenciamento")
+            
+            # Criar três colunas para os botões
+            col1, col2, col3 = st.columns(3)
+            
             with col1:
-                st.write(f"Total de consultas salvas: {len(st.session_state.historico_consultas)}")
-            
-            with col2:
                 # Botão para exportar todo o histórico
-                if st.button("📥 Exportar Todo o Histórico", help="Baixe todas as notícias relevantes em um único arquivo CSV"):
-                    df_historico = export_all_history_to_csv(st.session_state.historico_consultas)
-                    if df_historico is not None:
-                        csv = df_historico.to_csv(index=False)
-                        st.download_button(
-                            label="⬇️ Baixar CSV",
-                            data=csv,
-                            file_name=f"historico_completo_{st.session_state.username}_{datetime.datetime.now(fuso_brasil).strftime('%Y%m%d_%H%M%S')}.csv",
-                            mime="text/csv",
-                            help="Clique para baixar o arquivo CSV com todo o histórico de notícias relevantes"
-                        )
+                df_historico = export_all_history_to_csv(st.session_state.historico_consultas)
+                if df_historico is not None:
+                    csv = df_historico.to_csv(index=False)
+                    st.download_button(
+                        label="📥 Exportar Todo o Histórico (CSV)",
+                        data=csv,
+                        file_name=f"historico_completo_{st.session_state.username}_{datetime.datetime.now(fuso_brasil).strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        help="Baixe todas as notícias relevantes em um único arquivo CSV"
+                    )
+                else:
+                    st.info("Não há notícias relevantes no histórico para exportar.")
+                    
+            with col2:
+                # Botão para exportar notícias filtradas
+                # Verificar se temos notícias filtradas na sessão
+                if st.session_state.get('tem_noticias_filtradas', False):
+                    st.download_button(
+                        label="📥 Exportar Notícias Filtradas (CSV)",
+                        data=st.session_state.csv_filtrado,
+                        file_name=f"noticias_filtradas_{datetime.datetime.now(fuso_brasil).strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        help=f"Baixe as {st.session_state.total_noticias_filtradas} notícias filtradas em formato CSV"
+                    )
+                    
+            with col3:
+                # Botão para limpar o histórico
+                if st.button("🗑️ Limpar Histórico", type="secondary", help="Excluir todo o histórico de notícias salvas"):
+                    # Confirmação antes de limpar o histórico
+                    if st.session_state.get('confirmar_exclusao', False):
+                        # Limpar o histórico
+                        if clear_user_history(st.session_state.username):
+                            # Limpar o histórico na sessão
+                            st.session_state.historico_consultas = []
+                            st.session_state.confirmar_exclusao = False
+                            st.success("Histórico de notícias excluído com sucesso!")
+                            # Recarregar a página para atualizar a interface
+                            st.rerun()
+                        else:
+                            st.error("Não foi possível excluir o histórico. Tente novamente.")
+                            st.session_state.confirmar_exclusao = False
                     else:
-                        st.info("Não há notícias relevantes no histórico para exportar.")
+                        # Solicitar confirmação
+                        st.session_state.confirmar_exclusao = True
+                        st.warning("Tem certeza que deseja excluir todo o histórico de notícias? Esta ação não pode ser desfeita. Clique novamente para confirmar.")
             
-            # Exibir consultas em formato de acordeão
+            # Coletar todas as notícias relevantes de todas as consultas
+            st.subheader("Todas as Notícias Relevantes")
+            
+            # Preparar dados para a tabela de notícias
+            todas_noticias = []
             for i, consulta in enumerate(st.session_state.historico_consultas):
-                with st.expander(f"Consulta {i+1} - {consulta['data_hora']}"):
+                # Filtrar apenas notícias relevantes
+                noticias_relevantes = [result for j, result in enumerate(consulta['resultados']) 
+                                      if consulta['relevante_state'].get(str(j), False)]
+                
+                # Adicionar cada notícia relevante à lista
+                for result in noticias_relevantes:
+                    # Formatar a data para exibição
+                    data_publicacao = parser.parse(result['published'])
+                    data_formatada = data_publicacao.strftime('%d/%m/%Y %H:%M')
+                    
+                    # Adicionar dados da notícia
+                    todas_noticias.append({
+                        'Data da Consulta': consulta['data_hora'],
+                        'Palavra-chave': result['keyword'],
+                        'Título': result['title'],
+                        'Fonte': result['source'],
+                        'Data de Publicação': data_formatada,
+                        'Idioma': result['language'],
+                        'Link': f"[Abrir]({result['link']})"
+                    })
+            
+            if not todas_noticias:
+                st.info("Nenhuma notícia foi marcada como relevante em suas consultas.")
+            else:
+                # Criar DataFrame para a tabela de notícias
+                df_todas_noticias = pd.DataFrame(todas_noticias)
+                
+                # Inicializar variáveis de filtro no session_state se não existirem
+                if 'filtro_palavras' not in st.session_state:
+                    st.session_state.filtro_palavras = ["Todas"]
+                if 'filtro_idiomas' not in st.session_state:
+                    st.session_state.filtro_idiomas = ["Todos"]
+                if 'df_filtrado' not in st.session_state:
+                    st.session_state.df_filtrado = df_todas_noticias.copy()
+                
+                # Funções para atualizar os filtros sem recarregar a página
+                def atualizar_filtro_palavras():
+                    st.session_state.filtro_palavras = st.session_state.palavras_multiselect
+                
+                def atualizar_filtro_idiomas():
+                    st.session_state.filtro_idiomas = st.session_state.idiomas_multiselect
+                
+                def aplicar_filtros():
+                    # Atualizar os filtros manualmente a partir das seleções atuais
+                    st.session_state.filtro_palavras = st.session_state.palavras_multiselect
+                    st.session_state.filtro_idiomas = st.session_state.idiomas_multiselect
+                    
+                    # Aplicar filtros ao DataFrame
+                    df_temp = df_todas_noticias.copy()
+                    
+                    # Filtro por palavra-chave
+                    if "Todas" not in st.session_state.filtro_palavras and st.session_state.filtro_palavras:
+                        df_temp = df_temp[df_temp['Palavra-chave'].isin(st.session_state.filtro_palavras)]
+                    
+                    # Filtro por idioma
+                    if "Todos" not in st.session_state.filtro_idiomas and st.session_state.filtro_idiomas:
+                        df_temp = df_temp[df_temp['Idioma'].isin(st.session_state.filtro_idiomas)]
+                    
+                    # Atualizar o DataFrame filtrado no session_state
+                    st.session_state.df_filtrado = df_temp
+                    
+                    # Preparar dados para exportação
+                    st.session_state.tem_noticias_filtradas = True
+                    st.session_state.csv_filtrado = df_temp.to_csv(index=False)
+                    st.session_state.total_noticias_filtradas = len(df_temp)
+                
+                # Opções de filtro
+                st.subheader("Filtros")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # Filtro por palavra-chave
+                    palavras_chave_unicas = sorted(list(set(df_todas_noticias['Palavra-chave'])))
+                    st.multiselect(
+                        "Filtrar por palavra-chave:",
+                        options=["Todas"] + palavras_chave_unicas,
+                        default=st.session_state.filtro_palavras,
+                        key="palavras_multiselect",
+                        help="Selecione 'Todas' para mostrar todas as palavras-chave ou escolha palavras-chave específicas"
+                    )
+                
+                with col2:
+                    # Filtro por idioma
+                    idiomas_unicos = sorted(list(set(df_todas_noticias['Idioma'])))
+                    st.multiselect(
+                        "Filtrar por idioma:",
+                        options=["Todos"] + idiomas_unicos,
+                        default=st.session_state.filtro_idiomas,
+                        key="idiomas_multiselect",
+                        help="Selecione 'Todos' para mostrar todos os idiomas ou escolha idiomas específicos"
+                    )
+                
+                # Botão para aplicar filtros
+                st.button("Aplicar Filtros", on_click=aplicar_filtros, type="primary")
+                
+                # Usar o DataFrame filtrado do session_state
+                df_filtrado = st.session_state.df_filtrado
+                
+                # Exibir contagem de resultados filtrados
+                st.write(f"Exibindo **{len(df_filtrado)}** de **{len(todas_noticias)}** notícias relevantes")
+                
+                # Exibir tabela de notícias
+                st.dataframe(
+                    df_filtrado,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        'Link': st.column_config.LinkColumn(),
+                        'Data de Publicação': st.column_config.DatetimeColumn("Data de Publicação", format="DD/MM/YYYY HH:mm")
+                    }
+                )
+                
+                # Verificar se já temos notícias filtradas no session_state
+                if not st.session_state.get('tem_noticias_filtradas', False):
+                    # Inicialização padrão para o caso de primeira carga da página
+                    st.session_state.tem_noticias_filtradas = True
+                    st.session_state.csv_filtrado = df_filtrado.to_csv(index=False)
+                    st.session_state.total_noticias_filtradas = len(df_filtrado)
+                
+            # Botão para mostrar detalhes das consultas
+            with st.expander("Detalhes das Consultas"):
+                for i, consulta in enumerate(st.session_state.historico_consultas):
+                    st.markdown(f"### Consulta {i+1} - {consulta['data_hora']}")
+                    
                     # Exibir parâmetros da consulta
-                    st.subheader("Parâmetros da Consulta")
                     st.write(f"**Palavras-chave:** {', '.join(consulta['parametros']['keywords'])}")
                     st.write(f"**Idiomas:** {', '.join(consulta['parametros']['languages'])}")
                     st.write(f"**Período:** {consulta['parametros']['period']}")
                     st.write(f"**Data inicial:** {consulta['parametros']['start_date']}")
                     st.write(f"**Data final:** {consulta['parametros']['end_date']}")
                     
-                    # Filtrar apenas notícias relevantes
-                    noticias_relevantes = [result for j, result in enumerate(consulta['resultados']) if consulta['relevante_state'].get(str(j), False)]
+                    # Contar notícias relevantes
+                    noticias_relevantes = [result for j, result in enumerate(consulta['resultados']) 
+                                          if consulta['relevante_state'].get(str(j), False)]
+                    st.write(f"**Notícias relevantes:** {len(noticias_relevantes)}")
                     
-                    # Exibir resultados da consulta
-                    st.subheader(f"Notícias Relevantes ({len(noticias_relevantes)} notícias)")
-                    
-                    if not noticias_relevantes:
-                        st.info("Nenhuma notícia foi marcada como relevante nesta consulta.")
-                    
-                    if noticias_relevantes:
-                        # Criar tabela de resultados
-                        header_cols = st.columns([0.05, 0.15, 0.35, 0.25, 0.2])
-                        header_cols[0].write("**Índice**")
-                        header_cols[1].write("**Palavra-chave**")
-                        header_cols[2].write("**Título**")
-                        header_cols[3].write("**Data/Hora**")
-                        header_cols[4].write("**Link**")
-                        
-                        # Exibir cada linha da tabela
-                        for j, result in enumerate(noticias_relevantes):
-                            # Criar colunas para cada linha
-                            row_cols = st.columns([0.05, 0.15, 0.35, 0.25, 0.2])
-                            
-                            # Formatar a data para exibição
-                            data_publicacao = parser.parse(result['published'])
-                            data_formatada = data_publicacao.strftime('%d/%m/%Y %H:%M')
-                            
-                            # Dados da notícia
-                            row_cols[0].write(str(j))
-                            row_cols[1].write(result['keyword'])
-                            row_cols[2].write(result['title'])
-                            row_cols[3].write(data_formatada)
-                            row_cols[4].markdown(f"[Abrir]({result['link']})")
-                    
-                    if noticias_relevantes:
-                        # Preparar CSV para download
-                        datas_formatadas = []
-                        for result in noticias_relevantes:
-                            data_publicacao = parser.parse(result['published'])
-                            datas_formatadas.append(data_publicacao.strftime('%d/%m/%Y %H:%M'))
-                        
-                        csv_data = pd.DataFrame({
-                            'Índice': list(range(len(noticias_relevantes))),
-                            'Palavra-chave': [result['keyword'] for result in noticias_relevantes],
-                            'Título': [result['title'] for result in noticias_relevantes],
-                            'Fonte': [result['source'] for result in noticias_relevantes],
-                            'Data/Hora': datas_formatadas,
-                            'Idioma': [result['language'] for result in noticias_relevantes],
-                            'Link': [result['link'] for result in noticias_relevantes]
-                        })
-                        
-                        # Converter para CSV
-                        csv = csv_data.to_csv(index=False)
-                        
-                        # Botão para download direto em CSV
-                        st.download_button(
-                            label="Baixar Notícias Relevantes (CSV)",
-                            data=csv,
-                            file_name=f"noticias_relevantes_{consulta['id']}.csv",
-                            mime="text/csv",
-                            help="Baixe as notícias relevantes em formato CSV para abrir em Excel ou outro programa de planilhas"
-                        )
+                    # Separador entre consultas
+                    if i < len(st.session_state.historico_consultas) - 1:
+                        st.markdown("---")
                     
 
 
@@ -878,35 +1133,114 @@ with tab3:
                     st.success(f"Palavra-chave '{keyword_to_remove}' removida com sucesso!")
                     st.rerun()
 
-# Aba 4: Sobre
+# Aba 4: Estatísticas
 with tab4:
     if st.session_state.autenticado:
-        st.header("Sobre o Radar de Mercado IBBA")
-        st.markdown("""
-        ### Descrição
-        O Radar de Mercado IBBA é uma aplicação segura e eficiente que permite monitorar notícias relacionadas a palavras-chave específicas no feed RSS do Google News, facilitando a análise de informações relevantes para o mercado financeiro e corporativo.
+        st.header("Estatísticas de Notícias Relevantes")
         
-        ### Funcionalidades
-        - Sistema de autenticação com senha para acesso seguro
-        - Cadastro e gerenciamento de palavras-chave de interesse
-        - Busca de notícias em português e inglês com fuso horário brasileiro
-        - Filtragem por período de tempo (24h, 7 dias ou período personalizado)
-        - Marcação de notícias relevantes para análise posterior
-        - Exportação dos resultados em formato CSV para análise em Excel
-        - Histórico de consultas com acesso a buscas anteriores
-        
-        ### Como usar
-        1. Faça login com a senha fornecida pelo administrador
-        2. Cadastre suas palavras-chave de interesse na aba "Gerenciar Palavras-chave"
-        3. Na aba "Buscar Notícias", selecione as palavras-chave, idiomas e período desejado
-        4. Clique em "Buscar Notícias" para obter os resultados
-        5. Marque as notícias relevantes usando os checkboxes na tabela
-        6. Baixe os resultados em formato CSV para análise detalhada
-        7. Acesse suas consultas anteriores na aba "Histórico de Consultas"
-    
-        ### Desenvolvido para
-        Esta aplicação foi desenvolvida exclusivamente para o IBBA como ferramenta de monitoramento de notícias e informações de mercado.
-        """)
+        # Botão para atualizar estatísticas
+        col1, col2 = st.columns([1, 5])
+        with col1:
+            if st.button("🔄 Atualizar", help="Recarregar dados para estatísticas"):
+                st.rerun()
+        with col2:
+            st.write("Clique no botão para atualizar as estatísticas com os dados mais recentes.")
+            
+        if not st.session_state.historico_consultas:
+            st.info("Nenhuma consulta salva no histórico. Realize buscas na aba 'Buscar Notícias' para gerar estatísticas.")
+        else:
+            # Função para processar os dados do histórico e gerar estatísticas
+            def gerar_estatisticas_por_palavra_chave():
+                # Dicionário para armazenar a contagem de notícias por palavra-chave
+                contagem_por_palavra = {}
+                total_noticias = 0
+                
+                # Processar cada consulta no histórico
+                for consulta in st.session_state.historico_consultas:
+                    # Filtrar apenas notícias relevantes
+                    noticias_relevantes = [result for j, result in enumerate(consulta['resultados']) 
+                                          if consulta['relevante_state'].get(str(j), False)]
+                    
+                    # Contar notícias por palavra-chave
+                    for noticia in noticias_relevantes:
+                        keyword = noticia['keyword']
+                        if keyword in contagem_por_palavra:
+                            contagem_por_palavra[keyword] += 1
+                        else:
+                            contagem_por_palavra[keyword] = 1
+                        total_noticias += 1
+                
+                # Ordenar por contagem (do maior para o menor)
+                contagem_ordenada = dict(sorted(contagem_por_palavra.items(), key=lambda x: x[1], reverse=True))
+                
+                return contagem_ordenada, total_noticias
+            
+            # Gerar estatísticas
+            contagem_por_palavra, total_noticias = gerar_estatisticas_por_palavra_chave()
+            
+            if not contagem_por_palavra:
+                st.warning("Nenhuma notícia relevante encontrada no histórico.")
+            else:
+                # Exibir resumo
+                st.subheader("Resumo")
+                st.write(f"Total de notícias relevantes: **{total_noticias}**")
+                st.write(f"Número de palavras-chave diferentes: **{len(contagem_por_palavra)}**")
+                
+                # Exibir estatísticas em formato de texto
+                st.subheader("Notícias por Palavra-chave")
+                
+                # Criar uma tabela com as contagens
+                data = {
+                    'Palavra-chave': list(contagem_por_palavra.keys()),
+                    'Quantidade de Notícias': list(contagem_por_palavra.values()),
+                    'Porcentagem': [f"{(count/total_noticias)*100:.1f}%" for count in contagem_por_palavra.values()]
+                }
+                
+                df_estatisticas = pd.DataFrame(data)
+                st.dataframe(df_estatisticas, use_container_width=True)
+                
+                # Exibir gráfico de barras
+                st.subheader("Gráfico de Notícias por Palavra-chave")
+                
+                # Criar dataframe para o gráfico
+                df_grafico = pd.DataFrame({
+                    'Palavra-chave': list(contagem_por_palavra.keys()),
+                    'Quantidade': list(contagem_por_palavra.values())
+                })
+                
+                # Limitar a 15 palavras-chave para melhor visualização
+                if len(df_grafico) > 15:
+                    df_grafico = df_grafico.head(15)
+                    st.info("Mostrando apenas as 15 palavras-chave mais frequentes no gráfico.")
+                
+                # Criar gráfico com Altair
+                import altair as alt
+                
+                chart = alt.Chart(df_grafico).mark_bar().encode(
+                    x=alt.X('Quantidade:Q', title='Quantidade de Notícias'),
+                    y=alt.Y('Palavra-chave:N', sort='-x', title='Palavra-chave'),
+                    tooltip=['Palavra-chave', 'Quantidade']
+                ).properties(
+                    title='Notícias Relevantes por Palavra-chave',
+                    width=600,
+                    height=400
+                ).configure_axis(
+                    labelFontSize=12,
+                    titleFontSize=14
+                )
+                
+                st.altair_chart(chart, use_container_width=True)
+                
+                # Opção para exportar os dados
+                csv = df_estatisticas.to_csv(index=False)
+                st.download_button(
+                    label="⬇️ Baixar Estatísticas (CSV)",
+                    data=csv,
+                    file_name=f"estatisticas_palavras_chave_{datetime.datetime.now(fuso_brasil).strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    help="Baixe as estatísticas em formato CSV para análise detalhada"
+                )
+
 
 # Rodapé - visível para todos, mesmo sem autenticação
 st.markdown("---")

@@ -1,0 +1,169 @@
+2025-03-09 16:52:12,353 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:12,920 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Embedded%20Finance%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:13,615 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:52:14,349 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance+neg%C3%B3cios&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:14,859 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance+economia&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:15,693 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:16,283 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Embedded%20Finance%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:17,232 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:52:18,093 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance+market&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:18,997 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance+business&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:19,730 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:20,147 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22ERP%20Banking%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:20,543 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:52:21,300 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking+neg%C3%B3cios&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:22,132 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking+economia&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:22,922 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:23,775 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22ERP%20Banking%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:24,122 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:52:24,672 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking+finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:25,298 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking+business&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:26,018 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:26,759 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Techfin%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:27,248 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:52:27,964 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:28,434 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+finan%C3%A7as&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:29,175 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:29,530 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Techfin%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:29,843 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:52:30,198 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+market&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:30,573 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+economy&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:30,986 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:31,463 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:31,772 - GoogleNewsSearcher - WARNING - No entries found in feed from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:31,772 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:52:32,146 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:32,545 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+finan%C3%A7as&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:32,947 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:33,305 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:33,747 - GoogleNewsSearcher - WARNING - No entries found in feed from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:33,747 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:52:34,078 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+economy&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:34,453 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+market&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:34,889 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:35,684 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Techfin%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:36,306 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:52:37,080 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin+finan%C3%A7as&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:38,111 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin+mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:38,989 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:39,639 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Techfin%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:40,155 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:52:40,873 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin+market&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:41,878 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin+finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:42,801 - GoogleNewsSearcher - INFO - Saved 1 results to cache for Techfin_en_20250308_20250309
+2025-03-09 16:52:42,801 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:43,344 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Integra%C3%A7%C3%B5es%20Banc%C3%A1rias%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:44,038 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:52:44,869 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias+finan%C3%A7as&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:45,502 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias+economia&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:46,102 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:46,798 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Integra%C3%A7%C3%B5es%20Banc%C3%A1rias%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:47,374 - GoogleNewsSearcher - WARNING - No entries found in feed from https://news.google.com/rss/search?q=%22Integra%C3%A7%C3%B5es%20Banc%C3%A1rias%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:47,375 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:52:48,039 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias+business&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:49,075 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias+market&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:49,645 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:50,551 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Ita%C3%BA%20BBA%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:51,570 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:52:52,429 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA+mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:53,440 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA+finan%C3%A7as&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:52:54,421 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:55,059 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Ita%C3%BA%20BBA%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:55,588 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:52:56,111 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA+economy&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:52:56,934 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA+market&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:11,787 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:11,943 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Embedded%20Finance%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:12,061 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:53:12,189 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance+mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:13,015 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance+economia&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:13,141 - GoogleNewsSearcher - INFO - Saved 8 results to cache for Embedded_Finance_pt_20250207_20250309
+2025-03-09 16:53:13,141 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:13,266 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Embedded%20Finance%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:13,395 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:53:13,559 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance+business&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:13,684 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance+finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:14,774 - GoogleNewsSearcher - INFO - Saved 26 results to cache for Embedded_Finance_en_20250207_20250309
+2025-03-09 16:53:14,774 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:14,896 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22ERP%20Banking%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:14,985 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:53:15,099 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking+finan%C3%A7as&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:15,653 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking+mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:16,463 - GoogleNewsSearcher - INFO - Saved 5 results to cache for ERP_Banking_pt_20250207_20250309
+2025-03-09 16:53:16,463 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:16,594 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22ERP%20Banking%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:16,717 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:53:16,855 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking+market&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:17,630 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking+business&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:17,781 - GoogleNewsSearcher - INFO - Saved 9 results to cache for ERP_Banking_en_20250207_20250309
+2025-03-09 16:53:17,781 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:17,902 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Techfin%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:18,045 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:53:18,182 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+finan%C3%A7as&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:18,289 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+economia&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:19,003 - GoogleNewsSearcher - INFO - Saved 5 results to cache for TOTVS_Techfin_pt_20250207_20250309
+2025-03-09 16:53:19,003 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:19,086 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Techfin%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:19,183 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:53:19,296 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+economy&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:19,390 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:19,791 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:19,905 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:19,996 - GoogleNewsSearcher - WARNING - No entries found in feed from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:19,996 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:53:20,098 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+neg%C3%B3cios&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:20,515 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+economia&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:21,067 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:21,167 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:21,263 - GoogleNewsSearcher - WARNING - No entries found in feed from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:21,263 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:53:21,358 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:21,670 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+economy&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:21,755 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:21,898 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Techfin%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:22,059 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:53:22,173 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin+mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:22,309 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin+neg%C3%B3cios&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:23,214 - GoogleNewsSearcher - INFO - Saved 4 results to cache for Techfin_pt_20250207_20250309
+2025-03-09 16:53:23,214 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:23,327 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Techfin%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:23,437 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:53:23,556 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin+business&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:24,276 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Techfin+finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:24,385 - GoogleNewsSearcher - INFO - Saved 5 results to cache for Techfin_en_20250207_20250309
+2025-03-09 16:53:24,385 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:24,497 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Integra%C3%A7%C3%B5es%20Banc%C3%A1rias%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:24,585 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:53:24,700 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias+economia&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:24,825 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias+mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:25,726 - GoogleNewsSearcher - INFO - Saved 12 results to cache for Integrações_Bancárias_pt_20250207_20250309
+2025-03-09 16:53:25,726 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:25,842 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Integra%C3%A7%C3%B5es%20Banc%C3%A1rias%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:25,933 - GoogleNewsSearcher - WARNING - No entries found in feed from https://news.google.com/rss/search?q=%22Integra%C3%A7%C3%B5es%20Banc%C3%A1rias%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:25,933 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:53:26,046 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias+business&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:26,220 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Integra%C3%A7%C3%B5es%20Banc%C3%A1rias+market&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:26,323 - GoogleNewsSearcher - INFO - Saved 2 results to cache for Integrações_Bancárias_en_20250207_20250309
+2025-03-09 16:53:26,323 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:26,473 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Ita%C3%BA%20BBA%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:26,626 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:53:26,760 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA+economia&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:27,635 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA+finan%C3%A7as&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:53:27,766 - GoogleNewsSearcher - INFO - Saved 69 results to cache for Itaú_BBA_pt_20250207_20250309
+2025-03-09 16:53:27,766 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:27,879 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Ita%C3%BA%20BBA%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:27,987 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:53:28,098 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA+finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:29,100 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Ita%C3%BA%20BBA+business&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:53:29,894 - GoogleNewsSearcher - INFO - Saved 13 results to cache for Itaú_BBA_en_20250207_20250309
+2025-03-09 16:54:55,746 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:54:56,230 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Techfin%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:54:56,590 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 16:54:57,035 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+neg%C3%B3cios&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:54:57,732 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 16:54:58,385 - GoogleNewsSearcher - INFO - Saved 35 results to cache for TOTVS_Techfin_pt_20240101_20250309
+2025-03-09 16:54:58,386 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:54:58,955 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Techfin%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:54:59,238 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 16:54:59,540 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 16:55:00,110 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+market&hl=en-US&gl=US&ceid=US:en

@@ -600,68 +600,48 @@ with tab1:
                 # Removido o spinner duplicado
                 all_results = []
                 
-                # Usar processamento paralelo para melhorar desempenho
-                import concurrent.futures
-                import threading
-                
-                # Criar uma barra de progresso
-                progress_placeholder = st.empty()
-                status_text = st.empty()
-                progress_bar = progress_placeholder.progress(0)
-                
-                # Calcular o total de consultas a serem feitas
-                total_queries = len(selected_keywords) * len(selected_languages)
-                completed = 0
-                lock = threading.Lock()
-                
-                # Função para buscar notícias para um par keyword-language
-                def fetch_for_pair(args):
-                    nonlocal completed
-                    keyword, language = args
+                # Mostrar mensagem de carregamento
+                with st.spinner('Buscando notícias... Por favor, aguarde...'):
+                    # Buscar para cada palavra-chave e idioma sequencialmente
+                    # Isso é mais seguro com o Streamlit que não suporta bem atualizações de threads paralelas
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
                     
-                    try:
+                    # Calcular o total de consultas a serem feitas
+                    total_queries = len(selected_keywords) * len(selected_languages)
+                    completed = 0
+                    
+                    # Criar lista de tarefas (pares keyword-language)
+                    tasks = [(k, l) for k in selected_keywords for l in selected_languages]
+                    
+                    # Processar cada tarefa sequencialmente, mas com feedback visual
+                    for idx, (keyword, language) in enumerate(tasks):
+                        # Atualizar texto de status
+                        status_text.text(f"Buscando: '{keyword}' em {language}... ({idx+1}/{total_queries})")
+                        
                         # Converter datas para o formato esperado pelo método _fetch_news
                         start_date_obj = datetime.datetime.strptime(start_date, '%d/%m/%Y')
                         end_date_obj = datetime.datetime.strptime(end_date, '%d/%m/%Y')
                         
-                        # Atualizar texto de status
-                        status_text.text(f"Buscando: '{keyword}' em {language}... ({completed+1}/{total_queries})")
+                        try:
+                            # Buscar notícias
+                            results = searcher._fetch_news(
+                                keyword, 
+                                start_date_obj, 
+                                end_date_obj, 
+                                language
+                            )
+                            
+                            if results:
+                                all_results.extend(results)
+                        except Exception as e:
+                            st.error(f"Erro ao buscar notícias para '{keyword}' em {language}: {e}")
                         
-                        # Buscar notícias
-                        results = searcher._fetch_news(
-                            keyword, 
-                            start_date_obj, 
-                            end_date_obj, 
-                            language
-                        )
-                        
-                        # Atualizar contador e barra de progresso
-                        with lock:
-                            completed += 1
-                            progress_bar.progress(completed / total_queries)
-                        
-                        return results or []
-                    except Exception as e:
-                        print(f"Erro ao buscar notícias para {keyword} em {language}: {e}")
-                        with lock:
-                            completed += 1
-                            progress_bar.progress(completed / total_queries)
-                        return []
-                
-                # Criar lista de tarefas (pares keyword-language)
-                tasks = [(k, l) for k in selected_keywords for l in selected_languages]
-                
-                # Executar buscas em paralelo com no máximo 3 workers para não sobrecarregar
-                with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-                    results_lists = list(executor.map(fetch_for_pair, tasks))
-                
-                # Combinar todos os resultados
-                for results in results_lists:
-                    all_results.extend(results)
+                        # Atualizar barra de progresso
+                        progress_bar.progress((idx + 1) / total_queries)
                     
-                # Limpar elementos temporários
-                progress_placeholder.empty()
-                status_text.empty()
+                    # Limpar elementos temporários
+                    status_text.empty()
                 
                 # Ordenar por data (mais recentes primeiro) se houver resultados
                 if all_results:
@@ -683,10 +663,9 @@ with tab1:
                 submit_button = st.form_submit_button("🔍 Buscar Notícias", type="primary", help="Clique para buscar notícias com os filtros selecionados")
                 if submit_button:
                     st.session_state._button_clicked = True
-                    with st.spinner('🔄 Buscando notícias... Por favor, aguarde...'):
-                        realizar_busca()
-                        if not st.session_state.all_results:
-                            st.warning("⚠️ Nenhuma notícia encontrada para os critérios selecionados. Tente ajustar os filtros.")
+                    realizar_busca()
+                    if not st.session_state.all_results:
+                        st.warning("⚠️ Nenhuma notícia encontrada para os critérios selecionados. Tente ajustar os filtros.")
             
             # Função de callback para atualizar o estado do checkbox
             def update_checkbox_state(i):

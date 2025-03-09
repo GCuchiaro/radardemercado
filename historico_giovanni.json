@@ -1,5 +1,41 @@
 [
   {
+    "id": "20250309_153307",
+    "data_hora": "09/03/2025 15:33",
+    "usuario": "Giovanni",
+    "parametros": {
+      "keywords": [
+        "Embedded Finance",
+        "ERP Banking",
+        "TOTVS Techfin",
+        "TOTVS Supplier",
+        "Techfin",
+        "Integrações Bancárias",
+        "Itaú BBA"
+      ],
+      "languages": [
+        "pt",
+        "en"
+      ],
+      "period": "Últimas 24 horas",
+      "start_date": "08/03/2025",
+      "end_date": "09/03/2025"
+    },
+    "resultados": [
+      {
+        "title": "Brooklyn nonprofit is giving corporate cast-off computers a second life - MSN",
+        "link": "https://news.google.com/rss/articles/CBMi3gJBVV95cUxOS1hybjBKUGxiTDJSUHRkV2ZGMzlwYVZWYWlnN3ZJRmZqT3R5Tzh0N1lXMkJiMHI5bjNwT05GRmU3alM4V1RuXzluMXdhU0R1dWNFMjk4Szd0R1RvYi0waVRaRFAtWGxST2NVT2J1bWVFTnB6X1FJZlZHUzVoSV9Rb1BlT21xYjN1TmFzb3FKUWVHemFuVW42TDNNdEtvSWdlaGpXU2ZCT1lrb1oySzVlM2xiM2taWnFJZVpRNFdmMkVaUE1zUnZ3MXp1aEhuT1h6QnBiWTdhM0g4NHlndEZoMHJYMmdLZTR0MzlwT3pfX3MxSXRyUVo1X3pKTUY3aHU4T1hRZmU1STJYek9RZklvOHBLdV9yS2czb2FUbmFKV04xWmUya1Q4dmxaZDRZdGVZNkszTHBWVWRFT1NuWU0xbVdteG1tYjNTc3ZNc3RuQ2k2cjdJbElzWTRtcG5kZw?oc=5",
+        "published": "08/03/2025 22:19",
+        "source": "MSN",
+        "keyword": "Techfin",
+        "language": "Inglês"
+      }
+    ],
+    "relevante_state": {
+      "0": true
+    }
+  },
+  {
     "id": "20250308_124737",
     "data_hora": "08/03/2025 12:47",
     "usuario": "Giovanni",

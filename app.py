@@ -6,6 +6,8 @@ import datetime
 import pytz
 import sys
 import hashlib
+import secrets
+from dateutil import parser
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from google_news_searcher import GoogleNewsSearcher
 
@@ -21,8 +23,16 @@ SENHA_PADRAO = "news2025"  # Senha padrão - você pode alterar para a senha des
 
 # Função para verificar a senha
 def verificar_senha(senha_informada):
-    # Compara a senha informada com a senha padrão
-    return senha_informada == SENHA_PADRAO
+    # Compara a senha informada com a senha padrão usando hash
+    if not senha_informada:
+        return False
+        
+    # Criar hash da senha informada
+    senha_hash = hashlib.sha256(senha_informada.encode()).hexdigest()
+    senha_padrao_hash = hashlib.sha256(SENHA_PADRAO.encode()).hexdigest()
+    
+    # Comparação segura usando tempo constante para evitar ataques de timing
+    return secrets.compare_digest(senha_hash, senha_padrao_hash)
 
 # Inicializar estado de autenticação
 if 'autenticado' not in st.session_state:
@@ -32,21 +42,21 @@ if 'autenticado' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state.username = ""
 
-# Função para fazer login
+# Função para fazer login (mantida para compatibilidade)
 def fazer_login(senha):
     username = st.session_state.get('username', '').strip()
     
     if not username:
         st.error("Por favor, informe seu nome de usuário.")
-        return
+        return False
         
     if not senha:
         st.error("Por favor, informe a senha.")
-        return
+        return False
         
     if not verificar_senha(senha):
         st.error("Senha incorreta. Tente novamente.")
-        return
+        return False
     
     # Se chegou aqui, login está válido
     st.session_state.autenticado = True
@@ -64,7 +74,8 @@ def fazer_login(senha):
     except Exception as e:
         st.error(f"Erro ao carregar histórico: {e}")
         st.session_state.historico_consultas = []
-        
+    
+    return True
 # Função para atualizar o estado de relevância na edição
 def update_relevance_state(consulta_id, indice):
     # Obter a chave do checkbox
@@ -96,26 +107,93 @@ if '_button_clicked' not in st.session_state:
 if 'historico_consultas' not in st.session_state:
     st.session_state.historico_consultas = []
 
-# Função para carregar as palavras-chave
-def load_keywords():
-    if os.path.exists(searcher.config_file):
+# Função para carregar as palavras-chave do usuário
+def load_keywords(username=None):
+    # Se não for especificado um usuário, carrega as palavras-chave globais
+    if username is None or not username.strip():
+        if os.path.exists(searcher.config_file):
+            try:
+                with open(searcher.config_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    keywords = data.get('keywords', [])
+                    # Verificar se keywords é realmente uma lista
+                    if not isinstance(keywords, list):
+                        st.warning("O formato das palavras-chave no arquivo de configuração é inválido. Inicializando com lista vazia.")
+                        return []
+                    return keywords
+            except json.JSONDecodeError:
+                st.error("Erro ao decodificar o arquivo de palavras-chave. O arquivo pode estar corrompido.")
+                return []
+            except Exception as e:
+                st.error(f"Erro ao carregar palavras-chave: {e}")
+                return []
+        return []
+    
+    # Se for especificado um usuário, carrega as palavras-chave específicas do usuário
+    user_keywords_file = get_user_keywords_file(username)
+    if os.path.exists(user_keywords_file):
         try:
-            with open(searcher.config_file, 'r', encoding='utf-8') as f:
+            with open(user_keywords_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                return data.get('keywords', [])
+                keywords = data.get('keywords', [])
+                # Verificar se keywords é realmente uma lista
+                if not isinstance(keywords, list):
+                    st.warning(f"O formato das palavras-chave do usuário {username} é inválido. Inicializando com lista vazia.")
+                    return []
+                return keywords
+        except json.JSONDecodeError:
+            st.error(f"Erro ao decodificar o arquivo de palavras-chave do usuário {username}. O arquivo pode estar corrompido.")
+            return []
         except Exception as e:
-            st.error(f"Erro ao carregar palavras-chave: {e}")
+            st.error(f"Erro ao carregar palavras-chave do usuário {username}: {e}")
+            return []
+    else:
+        # Criar o diretório e arquivo se não existir
+        try:
+            os.makedirs(os.path.dirname(user_keywords_file), exist_ok=True)
+            with open(user_keywords_file, 'w', encoding='utf-8') as f:
+                json.dump({'keywords': []}, f, ensure_ascii=False, indent=2)
+            return []
+        except Exception as e:
+            st.error(f"Erro ao criar arquivo de palavras-chave para o usuário {username}: {e}")
             return []
     return []
 
 # Função para salvar as palavras-chave
-def save_keywords(keywords):
+def save_keywords(keywords, username=None):
+    # Validar entrada
+    if not isinstance(keywords, list):
+        st.error("Erro: As palavras-chave devem estar em formato de lista.")
+        return False
+        
+    # Se não for especificado um usuário, salva as palavras-chave globais
+    if username is None or not username.strip():
+        try:
+            with open(searcher.config_file, 'w', encoding='utf-8') as f:
+                json.dump({'keywords': keywords}, f, ensure_ascii=False, indent=2)
+            st.success("Palavras-chave salvas com sucesso!")
+            return True
+        except PermissionError as e:
+            st.error(f"Erro de permissão ao salvar palavras-chave: {e}")
+            return False
+        except Exception as e:
+            st.error(f"Erro ao salvar palavras-chave: {e}")
+            return False
+    
+    # Se for especificado um usuário, salva as palavras-chave específicas do usuário
     try:
-        with open(searcher.config_file, 'w', encoding='utf-8') as f:
+        user_keywords_file = get_user_keywords_file(username)
+        os.makedirs(os.path.dirname(user_keywords_file), exist_ok=True)
+        with open(user_keywords_file, 'w', encoding='utf-8') as f:
             json.dump({'keywords': keywords}, f, ensure_ascii=False, indent=2)
-        st.success("Palavras-chave salvas com sucesso!")
+        st.success(f"Palavras-chave do usuário {username} salvas com sucesso!")
+        return True
+    except PermissionError as e:
+        st.error(f"Erro de permissão ao salvar palavras-chave do usuário {username}: {e}")
+        return False
     except Exception as e:
-        st.error(f"Erro ao salvar palavras-chave: {e}")
+        st.error(f"Erro ao salvar palavras-chave do usuário {username}: {e}")
+        return False
         
 # Funções para gerenciar o histórico de consultas por usuário
 def get_user_history_file(username):
@@ -126,6 +204,16 @@ def get_user_history_file(username):
     # Criar um nome de arquivo seguro baseado no nome do usuário
     safe_username = ''.join(c if c.isalnum() else '_' for c in username.lower().strip())
     return os.path.join(os.path.dirname(searcher.config_file), f"historico_{safe_username}.json")
+
+# Função para obter o arquivo de palavras-chave do usuário
+def get_user_keywords_file(username):
+    # Verificar se o nome de usuário não está vazio
+    if not username or not username.strip():
+        raise ValueError("Nome de usuário não pode ser vazio")
+        
+    # Criar um nome de arquivo seguro baseado no nome do usuário
+    safe_username = ''.join(c if c.isalnum() else '_' for c in username.lower().strip())
+    return os.path.join(os.path.dirname(searcher.config_file), f"keywords_{safe_username}.json")
 
 def save_user_history(username, historico):
     try:
@@ -214,19 +302,78 @@ if not st.session_state.autenticado:
         st.title("📰 Radar de Mercado IBBA - Login")
         st.markdown("Por favor, informe seu nome e a senha para acessar o aplicativo.")
         
-        # Campo para nome de usuário
-        username = st.text_input("Nome de usuário", value=st.session_state.get('username', ''), placeholder="Digite seu nome").strip()
+        # Inicializar variáveis de sessão para controle do formulário
+        if 'login_submitted' not in st.session_state:
+            st.session_state.login_submitted = False
         
-        # Campo de senha
-        senha = st.text_input("Senha", type="password", key="senha")
-        
-        # Botão de login
-        if st.button("Entrar"):
-            # Atualizar username e verificar login
+        # Função para processar o login apenas quando o formulário for enviado
+        def process_login():
+            if not st.session_state.login_submitted:
+                return
+                
+            username = st.session_state.username_input.strip() if 'username_input' in st.session_state else ""
+            senha = st.session_state.senha_input if 'senha_input' in st.session_state else ""
+            
+            # Verificar se os campos estão preenchidos
+            if not username:
+                st.error("Por favor, informe seu nome de usuário.")
+                st.session_state.login_submitted = False
+                return
+                
+            if not senha:
+                st.error("Por favor, informe a senha.")
+                st.session_state.login_submitted = False
+                return
+            
+            # Atualizar username na sessão
             st.session_state.username = username
-            if fazer_login(senha):
+            
+            # Tentar fazer login
+            if verificar_senha(senha):
+                st.session_state.autenticado = True
+                st.session_state.username = username
+                
+                try:
+                    # Carregar o histórico de consultas do usuário
+                    historico = load_user_history(username)
+                    if historico:
+                        st.session_state.historico_consultas = historico
+                        st.success(f"Bem-vindo, {username}! Seu histórico com {len(historico)} consultas foi carregado.")
+                    else:
+                        st.session_state.historico_consultas = []
+                        st.success(f"Bem-vindo, {username}! Nenhum histórico encontrado. Suas consultas serão salvas automaticamente.")
+                except Exception as e:
+                    st.error(f"Erro ao carregar histórico: {e}")
+                    st.session_state.historico_consultas = []
+                
                 main_container.empty()
-                st.experimental_rerun()
+                st.rerun()
+            else:
+                st.error("Senha incorreta. Tente novamente.")
+                st.session_state.login_submitted = False
+        
+        # Formulário para evitar recarregamento com Enter
+        with st.form(key="login_form"):
+            # Campo para nome de usuário
+            username = st.text_input(
+                "Nome de usuário", 
+                value=st.session_state.get('username', ''), 
+                placeholder="Digite seu nome",
+                key="username_input"
+            ).strip()
+            
+            # Campo de senha
+            senha = st.text_input(
+                "Senha", 
+                type="password", 
+                key="senha_input"
+            )
+            
+            # Botão de login dentro do formulário
+            submit_button = st.form_submit_button("Entrar")
+            if submit_button:
+                st.session_state.login_submitted = True
+                process_login()
         
         # Mensagem de rodapé
         st.markdown("---")
@@ -286,8 +433,8 @@ with tab1:
     if st.session_state.autenticado:
         st.header("Buscar Notícias")
         
-        # Carregar palavras-chave
-        keywords = load_keywords()
+        # Carregar palavras-chave específicas do usuário
+        keywords = load_keywords(st.session_state.username)
         
         if not keywords:
             st.warning("Nenhuma palavra-chave cadastrada. Vá para a aba 'Gerenciar Palavras-chave' para adicionar.")
@@ -359,49 +506,50 @@ with tab1:
         
             # Função para realizar a busca e atualizar a session_state
             def realizar_busca():
-                with st.spinner("Buscando notícias para todas as palavras-chave e idiomas selecionados..."):
-                    all_results = []
-                    
-                    # Buscar para cada palavra-chave e idioma sem mostrar status parcial
-                    for keyword in selected_keywords:
-                        for language in selected_languages:
-                            # Converter datas para o formato esperado pelo método _fetch_news
-                            start_date_obj = datetime.datetime.strptime(start_date, '%d/%m/%Y')
-                            end_date_obj = datetime.datetime.strptime(end_date, '%d/%m/%Y')
-                            
-                            results = searcher._fetch_news(
-                                keyword, 
-                                start_date_obj, 
-                                end_date_obj, 
-                                language
-                            )
-                            
-                            if results:
-                                all_results.extend(results)
-                    
-                    # Ordenar por data (mais recentes primeiro) se houver resultados
-                    if all_results:
-                        from dateutil import parser
-                        all_results.sort(key=lambda x: parser.parse(x['published']), reverse=True)
+                # Removido o spinner duplicado
+                all_results = []
+                
+                # Buscar para cada palavra-chave e idioma sem mostrar status parcial
+                for keyword in selected_keywords:
+                    for language in selected_languages:
+                        # Converter datas para o formato esperado pelo método _fetch_news
+                        start_date_obj = datetime.datetime.strptime(start_date, '%d/%m/%Y')
+                        end_date_obj = datetime.datetime.strptime(end_date, '%d/%m/%Y')
                         
-                        # Armazenar resultados na session_state
-                        st.session_state.all_results = all_results
+                        results = searcher._fetch_news(
+                            keyword, 
+                            start_date_obj, 
+                            end_date_obj, 
+                            language
+                        )
                         
-                        # Inicializar checkboxes para novos resultados
-                        for i in range(len(all_results)):
-                            if i not in st.session_state.relevante_state:
-                                st.session_state.relevante_state[i] = False
-                    else:
-                        # Limpar resultados anteriores se a nova busca não retornou nada
-                        st.session_state.all_results = []
-                        st.warning("Nenhuma notícia encontrada para os critérios selecionados.")
-            # Botão para buscar
-            if st.button("🔍 Buscar Notícias", type="primary", help="Clique para buscar notícias com os filtros selecionados"):
-                st.session_state._button_clicked = True
-                with st.spinner('🔄 Buscando notícias... Por favor, aguarde...'):
-                    realizar_busca()
-                    if not st.session_state.all_results:
-                        st.warning("⚠️ Nenhuma notícia encontrada para os critérios selecionados. Tente ajustar os filtros.")
+                        if results:
+                            all_results.extend(results)
+                
+                # Ordenar por data (mais recentes primeiro) se houver resultados
+                if all_results:
+                    all_results.sort(key=lambda x: parser.parse(x['published']), reverse=True)
+                    
+                    # Armazenar resultados na session_state
+                    st.session_state.all_results = all_results
+                    
+                    # Inicializar checkboxes para novos resultados
+                    for i in range(len(all_results)):
+                        if i not in st.session_state.relevante_state:
+                            st.session_state.relevante_state[i] = False
+                else:
+                    # Limpar resultados anteriores se a nova busca não retornou nada
+                    st.session_state.all_results = []
+                    st.warning("Nenhuma notícia encontrada para os critérios selecionados.")
+            # Botão para buscar usando formulário para evitar problemas com Enter
+            with st.form(key="search_form"):
+                submit_button = st.form_submit_button("🔍 Buscar Notícias", type="primary", help="Clique para buscar notícias com os filtros selecionados")
+                if submit_button:
+                    st.session_state._button_clicked = True
+                    with st.spinner('🔄 Buscando notícias... Por favor, aguarde...'):
+                        realizar_busca()
+                        if not st.session_state.all_results:
+                            st.warning("⚠️ Nenhuma notícia encontrada para os critérios selecionados. Tente ajustar os filtros.")
             
             # Função de callback para atualizar o estado do checkbox
             def update_checkbox_state(i):
@@ -482,7 +630,6 @@ with tab1:
                     row_cols = st.columns([0.05, 0.15, 0.35, 0.2, 0.1, 0.15])
                     
                     # Formatar a data para exibição
-                    from dateutil import parser
                     data_publicacao = parser.parse(result['published'])
                     data_formatada = data_publicacao.strftime('%d/%m/%Y %H:%M')
                     
@@ -596,7 +743,7 @@ with tab2:
                         st.download_button(
                             label="⬇️ Baixar CSV",
                             data=csv,
-                            file_name=f"historico_completo_{st.session_state.username}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                            file_name=f"historico_completo_{st.session_state.username}_{datetime.datetime.now(fuso_brasil).strftime('%Y%m%d_%H%M%S')}.csv",
                             mime="text/csv",
                             help="Clique para baixar o arquivo CSV com todo o histórico de notícias relevantes"
                         )
@@ -638,7 +785,6 @@ with tab2:
                             row_cols = st.columns([0.05, 0.15, 0.35, 0.25, 0.2])
                             
                             # Formatar a data para exibição
-                            from dateutil import parser
                             data_publicacao = parser.parse(result['published'])
                             data_formatada = data_publicacao.strftime('%d/%m/%Y %H:%M')
                             
@@ -685,8 +831,12 @@ with tab3:
     if st.session_state.autenticado:
         st.header("Gerenciar Palavras-chave")
         
-        # Carregar palavras-chave existentes
-        keywords = load_keywords()
+        # Carregar palavras-chave existentes do usuário
+        username = st.session_state.username
+        keywords = load_keywords(username)
+        
+        # Exibir informação sobre palavras-chave por usuário
+        st.info(f"Você está gerenciando palavras-chave para o usuário: **{username}**")
         
         # Exibir palavras-chave existentes
         if keywords:
@@ -694,29 +844,39 @@ with tab3:
             for i, keyword in enumerate(keywords, 1):
                 st.text(f"{i}. {keyword}")
         else:
-            st.info("Nenhuma palavra-chave cadastrada.")
+            st.info("Nenhuma palavra-chave cadastrada para este usuário.")
         
-        # Adicionar nova palavra-chave
+        # Adicionar nova palavra-chave usando formulário para evitar problemas com Enter
         st.subheader("Adicionar nova palavra-chave")
-        new_keyword = st.text_input("Digite a nova palavra-chave:")
         
-        if st.button("Adicionar", disabled=not new_keyword):
-            if new_keyword and new_keyword not in keywords:
-                keywords.append(new_keyword)
-                save_keywords(keywords)
-                st.experimental_rerun()
-            elif new_keyword in keywords:
-                st.warning(f"A palavra-chave '{new_keyword}' já está cadastrada.")
+        with st.form(key="add_keyword_form"):
+            new_keyword = st.text_input("Digite a nova palavra-chave:")
+            submit_button = st.form_submit_button("Adicionar")
+            
+            if submit_button:
+                if not new_keyword:
+                    st.error("Por favor, digite uma palavra-chave antes de adicionar.")
+                elif new_keyword in keywords:
+                    st.warning(f"A palavra-chave '{new_keyword}' já está cadastrada.")
+                else:
+                    keywords.append(new_keyword)
+                    save_keywords(keywords, username)
+                    st.success(f"Palavra-chave '{new_keyword}' adicionada com sucesso!")
+                    st.rerun()
         
-        # Remover palavra-chave
+        # Remover palavra-chave usando formulário para evitar problemas com Enter
         if keywords:
             st.subheader("Remover palavra-chave")
-            keyword_to_remove = st.selectbox("Selecione a palavra-chave para remover:", keywords)
             
-            if st.button("Remover"):
-                keywords.remove(keyword_to_remove)
-                save_keywords(keywords)
-                st.experimental_rerun()
+            with st.form(key="remove_keyword_form"):
+                keyword_to_remove = st.selectbox("Selecione a palavra-chave para remover:", keywords)
+                submit_button = st.form_submit_button("Remover")
+                
+                if submit_button:
+                    keywords.remove(keyword_to_remove)
+                    save_keywords(keywords, username)
+                    st.success(f"Palavra-chave '{keyword_to_remove}' removida com sucesso!")
+                    st.rerun()
 
 # Aba 4: Sobre
 with tab4:

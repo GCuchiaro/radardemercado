@@ -1160,33 +1160,7 @@ with tab2:
                 if not st.session_state.get('tem_noticias_filtradas', False):
                     st.info("Nenhuma notícia foi marcada como relevante em suas consultas.")
                 
-            # Botão para mostrar detalhes das consultas
-            with st.expander("Detalhes das Consultas"):
-                for i, consulta in enumerate(st.session_state.historico_consultas):
-                    st.markdown(f"### Consulta {i+1} - {consulta['data_hora']}")
-                    
-                    # Exibir parâmetros da consulta
-                    st.write(f"**Palavras-chave:** {', '.join(consulta['parametros']['keywords'])}")
-                    st.write(f"**Idiomas:** {', '.join(consulta['parametros']['languages'])}")
-                    
-                    # Verificar se as datas existem nos parâmetros
-                    start_date = consulta['parametros'].get('start_date', 'N/A')
-                    end_date = consulta['parametros'].get('end_date', 'N/A')
-                    
-                    # Exibir período de datas
-                    if start_date != 'N/A' and end_date != 'N/A':
-                        st.write(f"**Período:** {start_date} a {end_date}")
-                    else:
-                        st.write("**Período:** Não especificado")
-                    
-                    # Contar notícias relevantes
-                    noticias_relevantes = [result for j, result in enumerate(consulta['resultados']) 
-                                          if consulta['relevante_state'].get(str(j), False)]
-                    st.write(f"**Notícias relevantes:** {len(noticias_relevantes)}")
-                    
-                    # Separador entre consultas
-                    if i < len(st.session_state.historico_consultas) - 1:
-                        st.markdown("---")
+            # Removido o expander "Detalhes das Consultas" conforme solicitado
                     
 
 

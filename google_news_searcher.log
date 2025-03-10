@@ -1176,3 +1176,48 @@
 2025-03-09 20:04:41,785 - GoogleNewsSearcher - INFO - Saved 7 results to cache for Chelsea_en_20250308_20250309
 2025-03-09 20:05:29,938 - GoogleNewsSearcher - INFO - Loaded 4 results from cache for ERP_Banking_pt_20250207_20250309
 2025-03-09 20:05:29,939 - GoogleNewsSearcher - INFO - Loaded 9 results from cache for ERP_Banking_en_20250207_20250309
+2025-03-09 20:21:14,396 - GoogleNewsSearcher - INFO - Loaded 14 results from cache for Itaú_BBA_pt_20250302_20250309
+2025-03-09 20:23:41,203 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:41,721 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Embedded%20Finance%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:42,396 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 20:23:43,106 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance+finan%C3%A7as&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:43,853 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Embedded%20Finance+neg%C3%B3cios&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:44,592 - GoogleNewsSearcher - INFO - Loaded 16 results from cache for Embedded_Finance_en_20250302_20250309
+2025-03-09 20:23:44,592 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:45,099 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22ERP%20Banking%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:45,689 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 20:23:46,338 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking+economia&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:46,990 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=ERP%20Banking+neg%C3%B3cios&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:47,773 - GoogleNewsSearcher - INFO - Loaded 1 results from cache for ERP_Banking_en_20250302_20250309
+2025-03-09 20:23:47,774 - GoogleNewsSearcher - INFO - Loaded 1 results from cache for TOTVS_Techfin_pt_20250302_20250309
+2025-03-09 20:23:47,775 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=en-US&gl=US&ceid=US:en
+2025-03-09 20:23:48,152 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Techfin%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 20:23:49,057 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 20:23:49,653 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+market&hl=en-US&gl=US&ceid=US:en
+2025-03-09 20:23:50,282 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Techfin+business&hl=en-US&gl=US&ceid=US:en
+2025-03-09 20:23:50,934 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:51,657 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:51,981 - GoogleNewsSearcher - WARNING - No entries found in feed from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:51,981 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 20:23:52,677 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+economia&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:53,354 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 20:23:53,975 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=en-US&gl=US&ceid=US:en
+2025-03-09 20:23:54,654 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 20:23:55,006 - GoogleNewsSearcher - WARNING - No entries found in feed from https://news.google.com/rss/search?q=%22TOTVS%20Supplier%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 20:23:55,006 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 20:23:55,628 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+economy&hl=en-US&gl=US&ceid=US:en
+2025-03-09 20:23:56,121 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=TOTVS%20Supplier+finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 20:23:56,527 - GoogleNewsSearcher - INFO - Loaded 14 results from cache for Itaú_BBA_pt_20250302_20250309
+2025-03-09 20:23:56,528 - GoogleNewsSearcher - INFO - Loaded 1 results from cache for Itaú_BBA_en_20250302_20250309
+2025-03-09 21:05:38,508 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Gest%C3%A3o%20tribut%C3%A1ria&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 21:05:39,582 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Gest%C3%A3o%20tribut%C3%A1ria%22&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 21:05:40,704 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Gest%C3%A3o%20tribut%C3%A1ria&hl=pt-BR&gl=BR&ceid=BR:pt-419&sort=date
+2025-03-09 21:05:41,628 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Gest%C3%A3o%20tribut%C3%A1ria+neg%C3%B3cios&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 21:05:42,548 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Gest%C3%A3o%20tribut%C3%A1ria+mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419
+2025-03-09 21:05:43,436 - GoogleNewsSearcher - INFO - Saved 35 results to cache for Gestão_tributária_pt_20250207_20250309
+2025-03-09 21:05:43,437 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Gest%C3%A3o%20tribut%C3%A1ria&hl=en-US&gl=US&ceid=US:en
+2025-03-09 21:05:44,234 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=%22Gest%C3%A3o%20tribut%C3%A1ria%22&hl=en-US&gl=US&ceid=US:en
+2025-03-09 21:05:44,785 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Gest%C3%A3o%20tribut%C3%A1ria&hl=en-US&gl=US&ceid=US:en&sort=date
+2025-03-09 21:05:45,350 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Gest%C3%A3o%20tribut%C3%A1ria+finance&hl=en-US&gl=US&ceid=US:en
+2025-03-09 21:05:46,186 - GoogleNewsSearcher - INFO - Fetching news from https://news.google.com/rss/search?q=Gest%C3%A3o%20tribut%C3%A1ria+business&hl=en-US&gl=US&ceid=US:en
+2025-03-09 21:05:47,213 - GoogleNewsSearcher - INFO - Saved 1 results to cache for Gestão_tributária_en_20250207_20250309

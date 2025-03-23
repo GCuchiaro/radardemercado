@@ -400,7 +400,7 @@ if 'autenticado' not in st.session_state:
 # Tela de login (exibida apenas se não estiver autenticado)
 if not st.session_state.autenticado:
     with main_container:
-        st.title("📰 Radar de Mercado IBBA - Login")
+        st.title("📰 Radar de Mercado - Login")
         st.markdown("Por favor, informe seu nome e a senha para acessar o aplicativo.")
         
         # Inicializar variáveis de sessão para controle do formulário
@@ -482,7 +482,7 @@ if not st.session_state.autenticado:
         st.stop()
 
 # Título principal (visível apenas após login)
-st.title("📰 Radar de Mercado IBBA")
+st.title("📰 Radar de Mercado")
 
 # Criação de abas (disponíveis para todos, mas conteúdo protegido)
 tab1, tab2, tab3, tab4 = st.tabs(["Buscar Notícias", "Histórico de Consultas", "Gerenciar Palavras-chave", "Estatísticas"])
@@ -507,7 +507,7 @@ if st.session_state.autenticado:
     with st.sidebar.expander("Sobre o Radar de Mercado"):
         st.markdown("""
         ### Descrição
-        O Radar de Mercado IBBA é uma aplicação que monitora notícias do Google News relacionadas 
+        O Radar de Mercado é uma aplicação que monitora notícias do Google News relacionadas 
         a palavras-chave específicas, facilitando a análise de informações relevantes para o 
         mercado financeiro.
 
@@ -528,9 +528,6 @@ if st.session_state.autenticado:
         6. Baixe os resultados em formato CSV para análise detalhada
         7. Acesse suas consultas anteriores na aba "Histórico de Consultas"
         
-        ### Desenvolvido para
-        Esta aplicação foi desenvolvida exclusivamente para o IBBA como ferramenta de 
-        monitoramento de notícias e informações de mercado.
         """)
     
     # Botão de logout
@@ -1327,4 +1324,4 @@ with tab4:
 
 # Rodapé - visível para todos, mesmo sem autenticação
 st.markdown("---")
-st.markdown("📰 Radar de Mercado IBBA | Desenvolvido por Giovanni Cuchiaro com a ajuda do Streamlit")
+st.markdown("📰 Radar de Mercado | Desenvolvido por Giovanni Cuchiaro com a ajuda do Streamlit")
